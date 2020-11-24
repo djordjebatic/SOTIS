@@ -1,4 +1,4 @@
-from SOTIS.init import db
+from init import db
 
 questions_asked = db.Table('questions_asked',
                            db.Column('test_id', db.Integer, db.ForeignKey('test.id'), primary_key=True),

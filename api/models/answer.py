@@ -1,4 +1,4 @@
-from SOTIS.init import db
+from init import db
 
 
 class Answer(db.Model):
