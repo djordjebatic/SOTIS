@@ -1,4 +1,4 @@
-from init import db
+from app import db
 
 
 class Question(db.Model):
@@ -9,6 +9,7 @@ class Question(db.Model):
     points = db.Column(db.Integer, nullable=False)
     correct_answer_id = db.Column(db.Integer, nullable=False)
     answers = db.relationship('Answer', backref='question', lazy=True)
+    professor_id = db.Column(db.Integer, db.ForeignKey('professor.id'), nullable=False)
 
     def __repr__(self):
         return "Question(title = {}, correct_answer = {}, points = {}".format(self.title, self.correct_answer,
