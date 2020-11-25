@@ -1,4 +1,4 @@
-from init import db
+from app import db
 
 
 class Answer(db.Model):
