@@ -1,9 +1,5 @@
 from app import db
 
-questions_asked = db.Table('questions_asked',
-                           db.Column('test_id', db.Integer, db.ForeignKey('test.id'), primary_key=True),
-                           db.Column('question_id', db.Integer, db.ForeignKey('question.id'), primary_key=True))
-
 
 class TestModel(db.Model):
     __tablename__ = 'test'
@@ -12,11 +8,11 @@ class TestModel(db.Model):
     date_taken = db.Column(db.DateTime)
     result = db.Column(db.Integer)
     professor_id = db.Column(db.Integer, db.ForeignKey('professor.id'), nullable=False)
-    questions_asked = db.relationship('Question', secondary=questions_asked, lazy='subquery',
-                                      backref=db.backref('tests', lazy=True))
-    
+    test_take = db.relationship('TestTake', backref='test', lazy=True)
+    test_question = db.relationship('TestQuestion', backref='test', lazy=True)
+
     def __repr__(self):
-        return "Test(date_taken = {}, result = {}, professor_id = {}, questions_asked = {}".format(self.date_taken,
+        return "Test(date_taken = {}, result = {}, professor_id = {}, test_take = {}".format(self.date_taken,
                                                                                                    self.result,
                                                                                                    self.professor_id,
-                                                                                                   self.questions_asked)
+                                                                                                   self.test_take)
