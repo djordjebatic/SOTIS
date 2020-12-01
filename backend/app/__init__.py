@@ -10,6 +10,7 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 CORS(app)
 
+from app import routes
 from app.api.models.professor import Professor
 from app.api.models.student import Student
 from app.api.models.test import TestModel
