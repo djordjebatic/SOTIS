@@ -35,4 +35,3 @@ class TestTakeAnswer(db.Model):
             'test_question_answer_id': self.test_question_answer_id,
             'selected': self.selected
         }
-

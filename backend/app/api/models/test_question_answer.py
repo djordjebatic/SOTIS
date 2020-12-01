@@ -32,6 +32,5 @@ class TestQuestionAnswer(db.Model):
             'question_id': self.question_id,
             'title': self.title,
             'isCorrect': self.isCorrect,
-            'test_take_answers': [test_question_answer.json_format() for test_question_answer in
-                                  self.test_question_answers]
+            'test_take_answers': [test_question_answer.json_format() for test_question_answer in self.test_question_answers]
         }

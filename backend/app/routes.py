@@ -1,6 +1,6 @@
 from app import app
 from app.api.models.student import Student
-from flask_restful import Resource, Api
+from flask_restful import Resource, reqparse, Api
 from flask import request
 
 
@@ -37,6 +37,7 @@ api.add_resource(UserLogin, '/login')
 
 
 @app.route('/')
+@app.route('/index')
 def index():
     return "Hello World!"
 
@@ -47,6 +48,8 @@ def handle_students():
     result = [
         {
         "id": student.id,
+        "username": student.username,
+        "password": student.password,
         "name": student.name,
         "last_name":student.last_name
         } for student in students

@@ -1,5 +1,5 @@
 import os
 
 class Config(object):
-    SQLALCHEMY_DATABASE_URI = "postgresql://postgres:admin@localhost:5432/sotis"
+    SQLALCHEMY_DATABASE_URI = "postgresql://postgres:postgres@localhost:5432/postgres"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
