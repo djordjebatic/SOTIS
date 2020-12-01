@@ -25,6 +25,3 @@ s2 = Student(name='Djordje', last_name='Batic')
 db.session.add(s1)
 db.session.add(s2)
 db.session.commit()'''
-
-if __name__ == "__main__":
-    app.run(debug=True)
