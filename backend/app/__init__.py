@@ -21,6 +21,9 @@ from app.api.models.test_take_answer import TestTakeAnswer
 
 db.drop_all()
 db.create_all()
+p1 = Professor(name='Milica', last_name='Skipina', username='milica.skipina', password='skipina')
+db.session.add(p1)
+db.session.commit()
 '''s1 = Student(name='Milica', last_name='Skipina')
 s2 = Student(name='Djordje', last_name='Batic')
 db.session.add(s1)

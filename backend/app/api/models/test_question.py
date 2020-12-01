@@ -11,11 +11,10 @@ class TestQuestion(db.Model):
     test_question_answers = db.relationship('TestQuestionAnswer', backref='test_question', lazy=True)
     test_take_answers = db.relationship('TestTakeAnswer', backref='test_question', lazy=True)
 
-    def __init__(self, title, points, test_id, test_question_answers):
+    def __init__(self, title, points, test_id):
         self.title = title
         self.points = points
         self.test_id = test_id
-        self.test_question_answers = test_question_answers
 
     def insert(self):
         db.session.add(self)

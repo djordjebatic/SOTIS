@@ -11,11 +11,10 @@ class TestModel(db.Model):
     test_questions = db.relationship('TestQuestion', backref='test', lazy=True)
     test_takes = db.relationship('TestTake', backref='test', lazy=True)
 
-    def __init__(self, title, max_score, professor_id, test_questions):
+    def __init__(self, title, max_score, professor_id):
         self.title = title
         self.max_score = max_score
         self.professor_id = professor_id
-        self.test_questions = test_questions
 
     def insert(self):
         db.session.add(self)
@@ -34,6 +33,6 @@ class TestModel(db.Model):
             'title': self.title,
             'max_score': self.max_score,
             'professor_id': self.professor_id,
-            'test_questions': [test_question.json_format() for test_question in self.test_question],
+            'test_questions': [test_question.json_format() for test_question in self.test_questions],
             'test_takes': [test_take.json_format() for test_take in self.test_takes]
         }
