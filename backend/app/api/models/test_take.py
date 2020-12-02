@@ -5,17 +5,15 @@ class TestTake(db.Model):
     __tablename__ = 'test_take'
 
     id = db.Column(db.Integer, primary_key=True)
-    score = db.Column(db.Integer, nullable=False)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     test_take_answers = db.relationship('TestTakeAnswer', backref='test_take', lazy=True)
 
-    def __init__(self, student_id, test_id, score, test_take_answers):
+    def __init__(self, student_id, test_id, score):
         self.student_id = student_id
         self.test_id = test_id
         self.score = score
-        self.test_take_answers = test_take_answers
 
     def insert(self):
         db.session.add(self)

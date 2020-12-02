@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import {Card, CardBody, CardHeader, Table } from 'reactstrap';
+import {Button, Card, CardBody, CardHeader, Table } from 'reactstrap';
+import {Sidebar, InputItem, DropdownItem, Icon, Item, Logo, LogoText} from 'react-sidebar-ui'
 
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
@@ -12,27 +13,31 @@ class StudentsPage extends Component {
       students: []          
     };
 
+    this.getStudents = this.getStudents.bind(this);
 
   }
 
   componentDidMount(){
-    axios({
-        method: 'get',
-        url: url + 'student',       
-    }).then((response) => {
-        console.log(response);
-        this.setState({students:response.data.students})
-    }, (error) => {
-        console.log(error);
-    });
+    this.getStudents()
 }
+
+  getStudents(){
+    axios({
+      method: 'get',
+      url: url + 'student',       
+  }).then((response) => {
+      console.log(response);
+      this.setState({students:response.data.students})
+  }, (error) => {
+      console.log(error);
+  });
+  }
 
 
   render() {
     return (
-      <Card>
+      <Card style={{ backgroundColor: "whiteSmoke" }}>
               <CardHeader>
-                Students
               </CardHeader>
               <CardBody>
                 <Table responsive>
@@ -55,6 +60,8 @@ class StudentsPage extends Component {
                 </Table>
               </CardBody>
             </Card>
+
+            
     );
   }
 }

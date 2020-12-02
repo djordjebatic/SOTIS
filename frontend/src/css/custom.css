@@ -1,0 +1,30 @@
+.bgimg {
+    background-image: url('../assets/img/wallpaper.png');
+	background-repeat: no-repeat; /* Do not repeat the image */
+	background-size: cover;
+	
+}
+
+.crow {
+	text-align: center; 
+	vertical-align: middle;
+}
+
+.mytable {
+    background-color: white;	
+	
+}
+
+.lgmodal {
+	width: 740px
+}
+
+tr{
+	border-bottom: 1px solid black;
+}
+
+th, td{
+	padding:10px; 
+	border-right:1px solid black;
+	width: 20%
+}

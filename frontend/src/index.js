@@ -2,18 +2,22 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
-import StudentsPage from "./views/Pages/StudentsPage.js"
 import { BrowserRouter, Route, Redirect, Switch } from "react-router-dom";
+
+const loading = () => <div className="animated fadeIn pt-3 text-center">Loading...</div>;
+
+const DefaultLayout = React.lazy(() => import('./containers/DefaultLayout/DefaultLayout.js'));
+const StudentsPage = React.lazy(() => import('./views/Pages/StudentsPage.js'));
+
 
 ReactDOM.render(
 <BrowserRouter>
+<React.Suspense fallback={loading()}>
     <Switch>
-      <Route
-        path="/students"
-        render={props => <StudentsPage {...props} />}
-      />
+      <Route path="/" name="Home" render={props => <DefaultLayout {...props}/>} />
       <Redirect to="/students" />
     </Switch>
+    </React.Suspense>
   </BrowserRouter>,
   document.getElementById('root')
 );

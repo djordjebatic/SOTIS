@@ -3,6 +3,8 @@ from app.api.models.student import Student
 from app.api.models.test_question import TestQuestion
 from app.api.models.test_question_answer import TestQuestionAnswer
 from app.api.models.test import TestModel
+from app.api.models.test_take_answer import TestTakeAnswer
+from app.api.models.test_take import TestTake
 from flask_restful import Resource, Api
 from flask import request
 
@@ -33,7 +35,6 @@ class UserLogin(Resource):
         else:
             # TODO access token (flask_jwt)
             return user.json_format(), 200
-
 
 class CreateTest(Resource):
     """
@@ -105,10 +106,31 @@ class CreateTest(Resource):
         return [test.json_format() for test in TestModel.query.all()], 200
 
 
+class CreateTestTake(Resource):
+    def post(self):
+        data = request.get_json()
+        # TODO calculate score
+        test = data['test']
+        test_take = TestTake(student_id=data['student_id'], test_id=data['test_id'], score=0)
+        test_take.insert()
+        
+        questions = test['test_questions']
+
+        for question in questions:
+            answers = question['test_question_answers']
+
+            for answer in answers:
+                test_take_answer = TestTakeAnswer(test_take_id = test_take.id, test_question_id = question['id'], test_question_answer_id = answer['id'], 
+                                                  selected = answer['isCorrect'])
+                test_take_answer.insert()
+
+        return test_take.id, 200
+
 api = Api(app)
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(CreateTest, '/test')
+api.add_resource(CreateTestTake, '/test_take')
 
 
 @app.route('/')
@@ -127,3 +149,24 @@ def handle_students():
         } for student in students
     ]
     return {"students": result}
+
+@app.route("/test/<int:id>")
+def getTest(id):
+    test = TestModel.query.get(int(id))
+    questions = test.test_questions
+    for i in range(len(questions)):
+            question_answers = test.test_questions[i].test_question_answers
+            for j in range(len(question_answers)):
+                test.test_questions[i].test_question_answers[j].isCorrect = 0
+
+    return test.json_format(), 200
+
+@app.route("/test_take/<int:id>")
+def getTestTake(id):
+    test_take = TestTake.query.get(int(id))
+    test = TestModel.query.get(int(test_take.test_id))
+    ret = {
+        "test_take": test_take.json_format(),
+        "test": test.json_format()
+    }
+    return ret, 200
