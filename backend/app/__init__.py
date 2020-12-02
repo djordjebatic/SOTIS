@@ -19,13 +19,12 @@ from app.api.models.test_question_answer import TestQuestionAnswer
 from app.api.models.test_take import TestTake
 from app.api.models.test_take_answer import TestTakeAnswer
 
-#db.drop_all()
-#db.create_all()
-# p1 = Professor(name='Milica', last_name='Skipina', username='milica.skipina', password='skipina')
-# db.session.add(p1)
-# db.session.commit()
-# s1 = Student(name='Milica', last_name='Skipina', username='milica', password='milica')
-# s2 = Student(name='Djordje', last_name='Batic', username='djordje', password='djordje')
-# db.session.add(s1)
-# db.session.add(s2)
-# db.session.commit()
+db.drop_all()
+db.create_all()
+p1 = Professor(name='Milica', last_name='Skipina', username='milica.skipina', password='skipina')
+db.session.add(p1)
+s1 = Student(name='Milica', last_name='Skipina', username='milica', password='milica')
+s2 = Student(name='Djordje', last_name='Batic', username='djordje', password='djordje')
+db.session.add(s1)
+db.session.add(s2)
+db.session.commit()
