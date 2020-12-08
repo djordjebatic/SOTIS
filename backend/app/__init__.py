@@ -18,6 +18,7 @@ from app.api.models.test_question import TestQuestion
 from app.api.models.test_question_answer import TestQuestionAnswer
 from app.api.models.test_take import TestTake
 from app.api.models.test_take_answer import TestTakeAnswer
+from app.api.models.problem_edge import Problem, Edge
 
 db.drop_all()
 db.create_all()

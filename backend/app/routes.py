@@ -5,6 +5,7 @@ from app.api.models.test_question_answer import TestQuestionAnswer
 from app.api.models.test import TestModel
 from app.api.models.test_take_answer import TestTakeAnswer
 from app.api.models.test_take import TestTake
+from app.api.models.problem_edge import Problem, Edge
 from flask_restful import Resource, Api
 from flask import request
 
@@ -35,6 +36,7 @@ class UserLogin(Resource):
         else:
             # TODO access token (flask_jwt)
             return user.json_format(), 200
+
 
 class CreateTest(Resource):
     """
@@ -83,6 +85,7 @@ class CreateTest(Resource):
         ]
     }
     """
+
     def post(self):
         data = request.get_json()
         # TODO checks
@@ -113,24 +116,78 @@ class CreateTestTake(Resource):
         test = data['test']
         test_take = TestTake(student_id=data['student_id'], test_id=data['test_id'], score=0)
         test_take.insert()
-        
+
         questions = test['test_questions']
 
         for question in questions:
             answers = question['test_question_answers']
 
             for answer in answers:
-                test_take_answer = TestTakeAnswer(test_take_id = test_take.id, test_question_id = question['id'], test_question_answer_id = answer['id'], 
-                                                  selected = answer['isCorrect'])
+                test_take_answer = TestTakeAnswer(test_take_id=test_take.id, test_question_id=question['id'],
+                                                  test_question_answer_id=answer['id'],
+                                                  selected=answer['isCorrect'])
                 test_take_answer.insert()
 
         return test_take.id, 200
+
+
+class ProblemAPI(Resource):
+    def post(self):
+        data = request.get_json()
+
+        # TODO check if problem in knowledge graph
+
+        title = data['title']
+
+        new_problem = Problem(title)
+        new_problem.insert()
+
+        return new_problem.json_format(), 200
+
+    def get(self):
+        return [problem.json_format() for problem in Problem.query.all()], 200
+
+
+class EdgeAPI(Resource):
+    # TODO ask if recursion is ok
+    def post(self):
+        data = request.get_json()
+
+        lower_node_id = data['lower_id']
+        upper_node_id = data['upper_id']
+
+        upper_node = Problem.query.filter(Problem.id == upper_node_id).first()
+        lower_node = Problem.query.filter(Problem.id == lower_node_id).first()
+
+        if not upper_node:
+            return {'error': 'Node (problem) with id {} doesn\'t exist'.format(upper_node_id)}, 409
+
+        if not lower_node:
+            return {'error': 'Node (problem) with id {} doesn\'t exist'.format(lower_node_id)}, 409
+
+        if Edge.query.filter(Edge.lower_id == lower_node_id and Edge.upper_id == upper_node_id).first():
+            return {'error': 'Edge already exists'}, 409
+
+        if lower_node_id in upper_node.json_format()['upper_edge_ids']:
+            return {'error': '[RECURSION] - Lower node (id: {}) already exists as an upper edge for upper node (id: {})'
+                    .format(lower_node_id, upper_node_id)}, 409
+
+        new_edge = Edge(lower_node, upper_node)
+        new_edge.insert()
+
+        return new_edge.json_format(), 200
+
+    def get(self):
+        return [edge.json_format() for edge in Edge.query.all()], 200
+
 
 api = Api(app)
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(CreateTest, '/test')
 api.add_resource(CreateTestTake, '/test_take')
+api.add_resource(ProblemAPI, '/problem')
+api.add_resource(EdgeAPI, '/edge')
 
 
 @app.route('/')
@@ -143,23 +200,25 @@ def handle_students():
     students = Student.query.all()
     result = [
         {
-        "id": student.id,
-        "name": student.name,
-        "last_name":student.last_name
+            "id": student.id,
+            "name": student.name,
+            "last_name": student.last_name
         } for student in students
     ]
     return {"students": result}
+
 
 @app.route("/test/<int:id>")
 def getTest(id):
     test = TestModel.query.get(int(id))
     questions = test.test_questions
     for i in range(len(questions)):
-            question_answers = test.test_questions[i].test_question_answers
-            for j in range(len(question_answers)):
-                test.test_questions[i].test_question_answers[j].isCorrect = 0
+        question_answers = test.test_questions[i].test_question_answers
+        for j in range(len(question_answers)):
+            test.test_questions[i].test_question_answers[j].isCorrect = 0
 
     return test.json_format(), 200
+
 
 @app.route("/test_take/<int:id>")
 def getTestTake(id):
