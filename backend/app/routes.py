@@ -5,6 +5,7 @@ from app.api.models.test_question_answer import TestQuestionAnswer
 from app.api.models.test import TestModel
 from app.api.models.test_take_answer import TestTakeAnswer
 from app.api.models.test_take import TestTake
+from app.api.models.problem_edge import Problem, Edge
 from flask_restful import Resource, Api
 from flask import request
 
@@ -35,6 +36,7 @@ class UserLogin(Resource):
         else:
             # TODO access token (flask_jwt)
             return user.json_format(), 200
+
 
 class CreateTest(Resource):
     """
@@ -120,17 +122,68 @@ class CreateTestTake(Resource):
             answers = question['test_question_answers']
 
             for answer in answers:
-                test_take_answer = TestTakeAnswer(test_take_id = test_take.id, test_question_id = question['id'], test_question_answer_id = answer['id'], 
-                                                  selected = answer['isCorrect'])
+                test_take_answer = TestTakeAnswer(test_take_id=test_take.id, test_question_id=question['id'], test_question_answer_id=answer['id'],
+                                                  selected=answer['isCorrect'])
                 test_take_answer.insert()
 
         return test_take.id, 200
+
+
+class ProblemAPI(Resource):
+    def post(self):
+        data = request.get_json()
+
+        # TODO check if problem in knowledge graph
+
+        title = data['title']
+
+        new_problem = Problem(title)
+        new_problem.insert()
+
+        return new_problem.json_format(), 200
+
+    def get(self):
+        return [problem.json_format() for problem in Problem.query.all()], 200
+
+
+class EdgeAPI(Resource):
+    # TODO ask if recursion is ok
+    def post(self):
+        data = request.get_json()
+
+        lower_node_id = data['lower_id']
+        upper_node_id = data['upper_id']
+
+        upper_node = Problem.query.filter(Problem.id == upper_node_id).first()
+        lower_node = Problem.query.filter(Problem.id == lower_node_id).first()
+
+        if not upper_node:
+            return {'Node (problem) with id {} doesn\'t exist'.format(upper_node_id)}, 409
+
+        if not lower_node:
+            return {'Node (problem) with id {} doesn\'t exist'.format(lower_node_id)}, 409
+
+        if upper_node_id in lower_node.json_format()['lower_edge_ids']:
+            return {'Upper node (problem) with id {} already exists as lower node for lower node (RECURSION)'
+                        .format(lower_node_id)}, 409
+
+        print(upper_node_id, lower_node.json_format()['lower_edge_ids'])
+        new_edge = Edge(lower_node, upper_node)
+        new_edge.insert()
+
+        return new_edge.json_format(), 200
+
+    def get(self):
+        return [edge.json_format() for edge in Edge.query.all()], 200
+
 
 api = Api(app)
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(CreateTest, '/test')
 api.add_resource(CreateTestTake, '/test_take')
+api.add_resource(ProblemAPI, '/problem')
+api.add_resource(EdgeAPI, '/edge')
 
 
 @app.route('/')
