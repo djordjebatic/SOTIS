@@ -2,6 +2,7 @@ import React from 'react';
 
 const StudentsPage = React.lazy(() => import('./views/pages/StudentsPage'))
 const Problems = React.lazy(() => import('./views/pages/Problems'))
+const Graph = React.lazy(() => import('./views/pages/Graph/Graph.js'));
 
 const Toaster = React.lazy(() => import('./views/notifications/toaster/Toaster'));
 const Tables = React.lazy(() => import('./views/base/tables/Tables'));
@@ -84,7 +85,8 @@ const routes = [
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
 
   { path: '/students', exact:true, name: 'Students Page', component: StudentsPage},
-  { path: '/problems', exact:true, name: 'Problems', component: Problems}
+  { path: '/problems', exact:true, name: 'Problems', component: Problems},
+  { path: '/graph', exact: true, name: 'Graph', component: Graph }
 ];
 
 export default routes;
