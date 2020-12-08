@@ -25,8 +25,8 @@ class Problem(db.Model):
         return {
             'id': self.id,
             'title': self.title,
-            'higher_edge_ids': [x.higher_node.id for x in self.lower_edges],
-            'lower_edge_ids': [x.lower_node.id for x in self.higher_edges]
+            'upper_edge_ids': [x.higher_node.id for x in self.lower_edges],
+            'lower_edge_ids': [x.lower_node.id for x in self.upper_edges]
         }
 
 
@@ -44,7 +44,7 @@ class Edge(db.Model):
     )
 
     higher_node = db.relationship(
-        Problem, primaryjoin=higher_id == Problem.id, backref="higher_edges"
+        Problem, primaryjoin=higher_id == Problem.id, backref="upper_edges"
     )
 
     def __init__(self, n1, n2):

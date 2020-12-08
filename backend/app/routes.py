@@ -85,6 +85,7 @@ class CreateTest(Resource):
         ]
     }
     """
+
     def post(self):
         data = request.get_json()
         # TODO checks
@@ -115,14 +116,15 @@ class CreateTestTake(Resource):
         test = data['test']
         test_take = TestTake(student_id=data['student_id'], test_id=data['test_id'], score=0)
         test_take.insert()
-        
+
         questions = test['test_questions']
 
         for question in questions:
             answers = question['test_question_answers']
 
             for answer in answers:
-                test_take_answer = TestTakeAnswer(test_take_id=test_take.id, test_question_id=question['id'], test_question_answer_id=answer['id'],
+                test_take_answer = TestTakeAnswer(test_take_id=test_take.id, test_question_id=question['id'],
+                                                  test_question_answer_id=answer['id'],
                                                   selected=answer['isCorrect'])
                 test_take_answer.insert()
 
@@ -158,16 +160,18 @@ class EdgeAPI(Resource):
         lower_node = Problem.query.filter(Problem.id == lower_node_id).first()
 
         if not upper_node:
-            return {'Node (problem) with id {} doesn\'t exist'.format(upper_node_id)}, 409
+            return {'error': 'Node (problem) with id {} doesn\'t exist'.format(upper_node_id)}, 409
 
         if not lower_node:
-            return {'Node (problem) with id {} doesn\'t exist'.format(lower_node_id)}, 409
+            return {'error': 'Node (problem) with id {} doesn\'t exist'.format(lower_node_id)}, 409
 
-        if upper_node_id in lower_node.json_format()['lower_edge_ids']:
-            return {'Upper node (problem) with id {} already exists as lower node for lower node (RECURSION)'
-                        .format(lower_node_id)}, 409
+        if Edge.query.filter(Edge.lower_id == lower_node_id and Edge.upper_id == upper_node_id).first():
+            return {'error': 'Edge already exists'}, 409
 
-        print(upper_node_id, lower_node.json_format()['lower_edge_ids'])
+        if lower_node_id in upper_node.json_format()['upper_edge_ids']:
+            return {'error': '[RECURSION] - Lower node (id: {}) already exists as an upper edge for upper node (id: {})'
+                    .format(lower_node_id, upper_node_id)}, 409
+
         new_edge = Edge(lower_node, upper_node)
         new_edge.insert()
 
@@ -196,23 +200,25 @@ def handle_students():
     students = Student.query.all()
     result = [
         {
-        "id": student.id,
-        "name": student.name,
-        "last_name":student.last_name
+            "id": student.id,
+            "name": student.name,
+            "last_name": student.last_name
         } for student in students
     ]
     return {"students": result}
+
 
 @app.route("/test/<int:id>")
 def getTest(id):
     test = TestModel.query.get(int(id))
     questions = test.test_questions
     for i in range(len(questions)):
-            question_answers = test.test_questions[i].test_question_answers
-            for j in range(len(question_answers)):
-                test.test_questions[i].test_question_answers[j].isCorrect = 0
+        question_answers = test.test_questions[i].test_question_answers
+        for j in range(len(question_answers)):
+            test.test_questions[i].test_question_answers[j].isCorrect = 0
 
     return test.json_format(), 200
+
 
 @app.route("/test_take/<int:id>")
 def getTestTake(id):
