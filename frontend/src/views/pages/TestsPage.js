@@ -1,11 +1,15 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import { Sidebar, InputItem, DropdownItem, Icon, Item, Logo, LogoText } from 'react-sidebar-ui'
+
 import {
-  Row, Col, Card, CardHeader, CardBody, FormGroup, Label, Form, Input, InputGroup, InputGroupAddon,
-  InputGroupText, Button, Collapse, FormText, Dropdown, DropdownToggle, DropdownMenu, ListGroup, ListGroupItem,
-  Modal, ModalBody, ModalFooter, ModalHeader
-} from "reactstrap";
+  CCard,
+  CRow,
+  CCardBody,
+  CCardHeader,
+  CLabel,
+  CButton,
+  CCollapse,
+} from '@coreui/react'
 
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
@@ -56,13 +60,13 @@ class TestsPage extends Component {
   render() {
     return (
       <div>
-        <Button style={{ backgroundColor: "lightgreen", marginLeft: "10px" }} onClick={event => this.props.history.push('/newTest')}>
-          <i class="fas fa-plus"></i>
-        </Button>
+        <CButton style={{marginLeft: "10px" }} color="success" onClick={event => this.props.history.push('/newTest')}>
+          <i class="fas fa-plus"></i>New test
+        </CButton>
         {(this.state.tests).map((test, index) =>
-          <Card style={{ backgroundColor: "lightblue", margin: "10px", padding: "2px" }}>
-            <CardHeader>
-              <Label>
+          <CCard style={{ backgroundColor: "lightblue", margin: "10px", padding: "2px" }}>
+            <CCardHeader>
+              <CLabel>
               <h1 hidden={!this.state.accordion[index]} onClick={() => this.toggleAccordion(index)} >{test.title}
                 <i style={{ marginLeft: "10px" }} class="fas fa-angle-up"></i>
               </h1>
@@ -70,35 +74,35 @@ class TestsPage extends Component {
                 {test.title}
                 <i style={{ marginLeft: "10px" }} class="fas fa-angle-down"></i>
               </h1>
-              </Label>
-              <Button  onClick={event => this.props.history.push('/takeTest/' + test.id)} >Take test</Button>
+              </CLabel>
+              <CButton  onClick={event => this.props.history.push('/takeTest/' + test.id)} >Take test</CButton>
               {/*    <Button block color="link" className="text-center m-0 p-0" onClick={() => this.toggleAccordion(index)} aria-expanded={this.state.accordion[0]} aria-controls={index}>
                     <h5 className="m-0 p-0">Expand</h5>
                   </Button>            
         */}
 
-            </CardHeader>
-            <Collapse hidden={!this.state.accordion[index]} isOpen={this.state.accordion[index]} data-parent="#accordion" id={index} aria-labelledby={index}>
-              <CardBody style={{ border: "3px solid lightblue", padding: "5px" }}>
+            </CCardHeader>
+            <CCollapse hidden={!this.state.accordion[index]} isOpen={this.state.accordion[index]} data-parent="#accordion" id={index} aria-labelledby={index}>
+              <CCardBody style={{ border: "3px solid lightblue", padding: "5px" }}>
                 {(test.test_questions).map((question, indexQ) =>
-                  <Row>
-                    <Card style={{ backgroundColor: "whitesmoke" }}>
-                      <CardHeader style={{ padding: "3px" }}>
+                  <CRow>
+                    <CCard style={{ backgroundColor: "whitesmoke" }}>
+                      <CCardHeader style={{ padding: "3px" }}>
                         {indexQ + 1}. {question.title} ({question.points})
-                      </CardHeader>
-                      <CardBody>
+                      </CCardHeader>
+                      <CCardBody>
                         {(question.test_question_answers).map((answer, indexA) =>
-                          <Card style={{ margin: "5px" }}>
+                          <CCard style={{ margin: "5px" }}>
                               <label style={{marginLeft:"20px"}}>{indexA + 1}. {answer.title}</label>
-                          </Card>
+                          </CCard>
                         )}
-                      </CardBody>
-                    </Card>
-                  </Row>
+                      </CCardBody>
+                    </CCard>
+                  </CRow>
                 )}
-              </CardBody>
-            </Collapse>
-          </Card>
+              </CCardBody>
+            </CCollapse>
+          </CCard>
         )}
       </div>
     );
