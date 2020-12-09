@@ -5,7 +5,7 @@ from app.api.models.test_question_answer import TestQuestionAnswer
 from app.api.models.test import TestModel
 from app.api.models.test_take_answer import TestTakeAnswer
 from app.api.models.test_take import TestTake
-from app.api.models.problem_edge import Problem, Edge
+from app.api.models.problem_edge import Problem, Edge, KnowledgeSpace
 from flask_restful import Resource, Api
 from flask import request
 
@@ -138,8 +138,10 @@ class ProblemAPI(Resource):
         # TODO check if problem in knowledge graph
 
         title = data['title']
-
-        new_problem = Problem(title)
+        knowledge_space_id = data['knowledge_space_id']
+        x = data['x']
+        y = data['y']
+        new_problem = Problem(title, knowledge_space_id, x, y)
         new_problem.insert()
 
         return new_problem.json_format(), 200
@@ -156,6 +158,8 @@ class EdgeAPI(Resource):
         lower_node_id = data['lower_id']
         upper_node_id = data['upper_id']
 
+        knowledge_space_id = data['knowledge_space_id']
+
         upper_node = Problem.query.filter(Problem.id == upper_node_id).first()
         lower_node = Problem.query.filter(Problem.id == lower_node_id).first()
 
@@ -165,14 +169,14 @@ class EdgeAPI(Resource):
         if not lower_node:
             return {'error': 'Node (problem) with id {} doesn\'t exist'.format(lower_node_id)}, 409
 
-        if Edge.query.filter(Edge.lower_id == lower_node_id and Edge.upper_id == upper_node_id).first():
-            return {'error': 'Edge already exists'}, 409
+        # if Edge.query.filter(Edge.lower_id == lower_node_id and Edge.upper_id == upper_node_id).first():
+        #     return {'error': 'Edge already exists'}, 409
 
         if lower_node_id in upper_node.json_format()['upper_edge_ids']:
-            return {'error': '[RECURSION] - Lower node (id: {}) already exists as an upper edge for upper node (id: {})'
-                    .format(lower_node_id, upper_node_id)}, 409
+           return {'error': '[RECURSION] - Lower node (id: {}) already exists as an upper edge for upper node (id: {})'
+                   .format(lower_node_id, upper_node_id)}, 409
 
-        new_edge = Edge(lower_node, upper_node)
+        new_edge = Edge(lower_node, upper_node, knowledge_space_id)
         new_edge.insert()
 
         return new_edge.json_format(), 200
@@ -180,6 +184,38 @@ class EdgeAPI(Resource):
     def get(self):
         return [edge.json_format() for edge in Edge.query.all()], 200
 
+class KnowledgeSpaceAPI(Resource):
+    def post(self):
+        data = request.get_json()
+        title = data['title']
+        new_knowledge_space = KnowledgeSpace(title)
+        new_knowledge_space.insert()
+
+        return new_knowledge_space.json_format(), 200
+
+    def get(self):
+        return [knowledge_space.json_format() for knowledge_space in KnowledgeSpace.query.all()], 200
+
+    def put(self):
+        data = request.get_json()
+        id = data['id']
+        graph = data['graph']
+        edges = graph['edges']
+        nodes = graph['nodes']
+        for edge in edges:
+            e = Edge.query.get(int(edge['id']))
+            e.lower_id = edge['source']
+            e.higher_id = edge['target']
+            e.knowledge_space_id = id
+            e.insert()
+        for node in nodes:
+            p = Problem.query.get(int(node['id']))
+            p.x = node['x']
+            p.y = node['y']
+            p.knowledge_space_id = id
+            p.insert()
+        knowledge_space = KnowledgeSpace.query.get(int(id))
+        return knowledge_space.json_format(), 200
 
 api = Api(app)
 api.add_resource(UserRegistration, '/register')
@@ -188,7 +224,7 @@ api.add_resource(CreateTest, '/test')
 api.add_resource(CreateTestTake, '/test_take')
 api.add_resource(ProblemAPI, '/problem')
 api.add_resource(EdgeAPI, '/edge')
-
+api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
 
 @app.route('/')
 def index():
@@ -229,3 +265,9 @@ def getTestTake(id):
         "test": test.json_format()
     }
     return ret, 200
+
+@app.route("/knowledge_space/<int:id>")
+def getKnowledgeSpace(id):
+    knowledge_space = KnowledgeSpace.query.get(int(id))
+
+    return knowledge_space.json_format(), 200

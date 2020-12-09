@@ -18,14 +18,31 @@ from app.api.models.test_question import TestQuestion
 from app.api.models.test_question_answer import TestQuestionAnswer
 from app.api.models.test_take import TestTake
 from app.api.models.test_take_answer import TestTakeAnswer
-from app.api.models.problem_edge import Problem, Edge
-
+from app.api.models.problem_edge import Problem, Edge, KnowledgeSpace
 db.drop_all()
 db.create_all()
-p1 = Professor(name='Milica', last_name='Skipina', username='milica.skipina', password='skipina')
-db.session.add(p1)
-s1 = Student(name='Milica', last_name='Skipina', username='milica', password='milica')
-s2 = Student(name='Djordje', last_name='Batic', username='djordje', password='djordje')
-db.session.add(s1)
-db.session.add(s2)
-db.session.commit()
+'''db.drop_all()
+db.create_all()
+
+
+
+ks = KnowledgeSpace('Prostor znanja')
+ks.insert()
+
+p1 = Problem('Proba 1', ks.id)
+p2 = Problem('Proba 2', ks.id)
+p3 = Problem('Proba 3', ks.id)
+p1.insert()
+p2.insert()
+p3.insert()
+
+e1 = Edge(p1, p2, ks.id)
+e2 = Edge(p2, p3, ks.id)
+e3 = Edge(p1, p3, ks.id)
+e1.insert()
+e2.insert()
+e3.insert()
+
+print(p1.json_format())
+print(p2.json_format())
+print(p3.json_format())'''

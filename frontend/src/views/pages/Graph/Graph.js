@@ -1,6 +1,21 @@
 import * as React from 'react';
 
 import {
+  CCol,
+  CButton,
+  CModal,
+  CModalHeader,
+  CModalBody,
+  CModalTitle, 
+  CModalFooter,
+  CFormGroup, 
+  CLabel, 
+  CInput,
+  CFormText,
+  CRow,
+} from '@coreui/react'
+
+import {
   GraphView,
   IEdge,
   Node,
@@ -19,6 +34,10 @@ import GraphConfig, {
   SPECIAL_TYPE,
   SKINNY_TYPE,
 } from './graph-config'; // Configures node/edge types
+
+import axios from 'axios'
+
+const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
 export type IGraph = {
   nodes: INode[],
@@ -220,10 +239,159 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
       layoutEngineType: undefined,
       selected: null,
       totalNodes: sample.nodes.length,
+      problems: [],
+      showModal: false,
+      title: '',
+      errorTitle: '',
+      buttonDisabled: true,
+      knowledgeSpaceTitle: '',
+      knowledgeSpace: {
+        "problems": [],
+        "edges": []
+      }
     };
 
     this.GraphView = React.createRef();
+    this.knowledgeSpace = this.getKnowledgeSpace.bind(this);
+    this.addProblem = this.addProblem.bind(this);
+    this.handleChangeTitle = this.handleChangeTitle.bind(this);
+    this.validateTitle = this.validateTitle.bind(this);
+    this.resetAll = this.resetAll.bind(this);
+    this.createGraph = this.createGraph.bind(this)
+    this.saveGraph = this.saveGraph.bind(this)
+    this.saveEdge = this.saveEdge.bind(this)
   }
+
+  componentDidMount(){
+    this.getKnowledgeSpace()
+}
+
+saveGraph(graph){
+  const { id } = this.props.match.params;
+  let data = {
+    "id": id,
+    "graph": graph
+  }
+  axios({
+    method: 'put',
+    url: url + 'knowledge_space',
+    //headers: { "Authorization": AuthStr } ,   
+    data: data
+}).then((response) => {
+    this.setState({ knowledgeSpaces: response.data })
+    this.createGraph(response.data)
+}, (error) => {
+    console.log(error);
+});
+}
+
+getKnowledgeSpace(){
+  const { id } = this.props.match.params;
+  axios({
+    method: 'get',
+    url: url + 'knowledge_space/' + id,
+  }).then((response) => {
+    this.setState({knowledgeSpaceTitle: response.data.title})
+    this.createGraph(response.data)
+  }, (error) => {
+    console.log(error);
+  });
+}
+
+createGraph(knowledgeSpace){
+  let edges = []
+  let nodes = []
+  let edge = {}
+  let node = {}
+  var i
+  for (i in knowledgeSpace.edges) {
+    edge = {
+      id: knowledgeSpace.edges[i].id,
+      source: knowledgeSpace.edges[i].lower_id,
+      target: knowledgeSpace.edges[i].higher_id,
+      type: EMPTY_EDGE_TYPE
+    }
+    edges.push(edge)
+  } 
+  for (i in knowledgeSpace.problems){
+    node = {
+      id: knowledgeSpace.problems[i].id,
+      title: knowledgeSpace.problems[i].title,
+      type: EMPTY_TYPE,
+      x: knowledgeSpace.problems[i].x,
+      y: knowledgeSpace.problems[i].y,
+    }
+    nodes.push(node)
+  }
+
+  const temp: IGraph = {
+    edges: edges,
+    nodes: nodes
+  };
+  this.setState({graph:temp})
+}
+
+  addProblem(){
+    const { id } = this.props.match.params;
+    let data = {
+      "title": this.state.title,
+      "knowledge_space_id": id,
+      "x": 20.0,
+      "y": 20.0
+  }
+  axios({
+      method: 'post',
+      url: url + 'problem',
+      //headers: { "Authorization": AuthStr } ,   
+      data: data
+  }).then((response) => {
+      this.getKnowledgeSpace()
+      this.resetAll()
+  }, (error) => {
+      console.log(error);
+  });
+  }
+
+  saveEdge(edge){
+    const { id } = this.props.match.params;
+    let data = {
+      "knowledge_space_id": id,
+      "lower_id" : edge.source,
+      "upper_id": edge.target  
+    }
+    axios({
+      method: 'post',
+      url: url + 'edge',
+      //headers: { "Authorization": AuthStr } ,   
+      data: data
+  }).then((response) => {
+      this.getKnowledgeSpace()
+  }, (error) => {
+      console.log(error);
+  });
+  }
+
+
+  resetAll(){
+    this.setState({showModal:false, buttonDisabled:true, title:'', errorTitle:''})
+  }
+
+  handleChangeTitle = e =>{
+    e.preventDefault();
+    this.setState({title: e.target.value})
+    this.validateTitle(e.target.value)
+  }
+
+  validateTitle(title){
+    title = title.trim()
+    if(title === ''){
+        this.setState({errorTitle: 'Title can not be empty', buttonDisabled:true})
+    }
+    else{
+        this.setState({errorTitle: '', buttonDisabled: false})
+    }
+  }
+
 
   // Helper to find the index of a given node
   getNodeIndex(searchNode: INode | any) {
@@ -278,6 +446,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
     this.setState({
       graph,
     });
+    this.saveGraph(graph)
   };
   deleteStartNode = () => {
     const graph = this.state.graph;
@@ -289,6 +458,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
     this.setState({
       graph,
     });
+    this.saveGraph(graph)
   };
 
   handleChange = (event: any) => {
@@ -312,6 +482,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
 
     graph.nodes[i] = viewNode;
     this.setState({ graph });
+    this.saveGraph(graph)
   };
 
   // Node 'mouseUp' handler
@@ -345,6 +516,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
 
     graph.nodes = [...graph.nodes, viewNode];
     this.setState({ graph });
+    this.saveGraph(graph)
   };
 
   // Deletes a node from the graph
@@ -361,6 +533,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
     graph.edges = newEdges;
 
     this.setState({ graph, selected: null });
+    this.saveGraph(graph)
   };
 
   // Creates a new node between two edges
@@ -387,6 +560,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
         selected: viewEdge,
       });
     }
+    this.saveEdge(viewEdge)
   };
 
   // Called when an edge is reattached to a different target.
@@ -409,6 +583,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
       graph,
       selected: edge,
     });
+    this.saveGraph(graph)
   };
 
   // Called when an edge is deleted
@@ -420,6 +595,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
       graph,
       selected: null,
     });
+    this.saveGraph(graph)
   };
 
   onUndo = () => {
@@ -459,6 +635,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
 
     graph.nodes = [...graph.nodes, newNode];
     this.forceUpdate();
+    this.saveGraph(graph)
   };
 
   handleChangeLayoutEngineType = (event: any) => {
@@ -484,7 +661,36 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
 
     return (
       <>
-        <div className="graph-header" style={{ height: '200px' }}>
+            <CCol xs="12" lg="12">
+        <div className="graph-header">
+            <h2>{this.state.knowledgeSpaceTitle}<CButton style={{marginBottom:"20px", float:"right"}} id="confirmButton" onClick={() => this.setState({showModal:true})} color="success" className="px-4">New problem</CButton>
+</h2>
+            <CModal 
+              show={this.state.showModal} 
+              onClose={() => this.resetAll()}
+            >
+              <CModalHeader closeButton>
+                <CModalTitle>New problem</CModalTitle>
+              </CModalHeader>
+              <CModalBody>
+              <CFormGroup>
+                      <CLabel htmlFor="problemTitle">Problem title</CLabel>
+                      <CInput type="text"
+                        id="problemTitle"
+                        name="problemTitle"
+                        onChange={this.handleChangeTitle}
+                        value={this.state.title}
+                        placeholder="Title"
+                      />
+                    <CFormText className="help-block"><p style={{ color: "red" }}>{this.state.errorTitle}</p></CFormText>
+
+                    </CFormGroup>
+              </CModalBody>
+              <CModalFooter>
+                <CButton disabled={this.state.buttonDisabled} color="success" onClick={() => this.addProblem()}>Add problem</CButton>{' '}
+                <CButton color="danger" onClick={() => this.resetAll()}>Cancel</CButton>
+              </CModalFooter>
+            </CModal>
           {/* <button onClick={this.addStartNode}>Add Node</button>
           <button onClick={this.deleteStartNode}>Delete Node</button>
           <input
@@ -515,7 +721,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
             </select>
           </div> */}
         </div>
-        <div id="graph" style={{ height: 'calc(100% - 87px)' }}>
+        <div id="graph" style={{ height:"700px" }}>
           <GraphView
             ref={el => (this.GraphView = el)}
             nodeKey={NODE_KEY}
@@ -539,6 +745,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
             layoutEngineType={this.state.layoutEngineType}
           />
         </div>
+        </CCol>
       </>
     );
   }
