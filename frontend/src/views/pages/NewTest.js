@@ -13,6 +13,7 @@ import {
     CButton,
     CCollapse,
   } from '@coreui/react'
+import CIcon from '@coreui/icons-react';
 
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
@@ -100,8 +101,9 @@ class TestsPage extends Component {
                         <CInput type="number" value={this.state.maxScore} min="1"
                             onChange={event => this.setState({ maxScore: event.target.value })} />
                     </CRow>
+                    <CRow>
                     {(this.state.questions).map((question, indexQ) =>
-                        <CRow>
+                                <CCol xs="12" sm="6" md="3">
                             <CCard style={{ backgroundColor: "whitesmoke", margin:"10px" }}>
                                 <CCardHeader style={{ padding: "3px" }}>
                                     <h3>{indexQ + 1}. {question.title} - {question.points} points</h3>
@@ -110,19 +112,22 @@ class TestsPage extends Component {
                                     {(question.answers).map((answer, indexA) =>
                                         <CCard style={{ margin: "5px" }}>
                                             <div>
-                                                <label hidden={answer.isCorrect === 0} >{indexA + 1}. {answer.title} <i style={{magin:"10px"}} class="fas fa-check"></i></label>
-                                                <label hidden={answer.isCorrect === 1} >{indexA + 1}. {answer.title} <i style={{magin:"10px"}} class="fas fa-times"></i></label>
+                                                <label hidden={answer.isCorrect === 0} >{indexA + 1}. {answer.title} <CIcon name="cil-check-alt"></CIcon></label>
+                                                <label hidden={answer.isCorrect === 1} >{indexA + 1}. {answer.title} <CIcon name="cil-x"></CIcon></label>
                                             </div>
                                         </CCard>
                                     )}
                                 </CCardBody>
                             </CCard>
-                        </CRow>
+                            </CCol>
                     )}
+                    </CRow>
                     <CRow hidden={!this.state.hideNewQuestion} style={{ margin: "10px" }}>
+                    <CCol xs="12" sm="12" md="12">
                         <CButton style={{ height: "40px" }} onClick={() => this.setState({ hideNewQuestion: false })}>
                             Add question
                         </CButton>
+                        </CCol>
                     </CRow>
                     <CRow hidden={this.state.hideNewQuestion}>
                         <CFormGroup row style={{backgroundColor:"whitesmoke"}}>
@@ -142,20 +147,21 @@ class TestsPage extends Component {
                             <h3 hidden={answer.isCorrect === 1}> {indexA + 1}. {answer.title}<i class="fas fa-times"></i></h3>
                         </CRow>
                     )}
-
                             <CRow hidden={!this.state.hideNewAnswer} style={{ margin: "10px" }}>
                                 <CButton  style={{ height: "40px" }} onClick={() => this.setState({ hideNewAnswer: false })}>
                                     Add new answer
                                 </CButton>
                             </CRow>
                             <CRow hidden={this.state.hideNewAnswer}>
+                            <CCol xs="12" sm="12" md="12">
                         <CFormGroup row style={{backgroundColor:"lightblue"}}>
-                            <CCol md="3">
+
+                            <CCol md="12">
                                 <CLabel style={{ marginRight: "10px" }}>Answer</CLabel>
                                 <CInput type="text" value={this.state.answerTitle}
                                     onChange={event => this.setState({ answerTitle: event.target.value })} />
                             </CCol>
-                            <CCol md="3">
+                            <CCol md="12">
                                 <CLabel style={{ marginRight: "10px" }}>Correct</CLabel>
                                 <CInput type="checkbox" value={this.state.isCorrect}
                                     onChange={event => this.setState({ isCorrect: event.target.checked})} />
@@ -166,10 +172,13 @@ class TestsPage extends Component {
                                 </CButton>
                             </CRow>
                         </CFormGroup>
+                        </CCol>
                     </CRow>
+                    <CCol xs="12" sm="12" md="12">
                     <CButton hidden={!this.state.hideNewAnswer} style={{ margin: "10px", height: "40px" }} onClick={() => this.addQuestion()}>
                                 Add question
                             </CButton>
+                    </CCol>
                         </CFormGroup>
                     </CRow>
                     <CRow>
