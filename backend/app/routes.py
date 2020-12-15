@@ -8,7 +8,7 @@ from app.api.models.test_take import TestTake
 from app.api.models.problem_edge import Problem, Edge, KnowledgeSpace
 from flask_restful import Resource, Api
 from flask import request
-
+import json
 
 class UserRegistration(Resource):
     def post(self):
@@ -151,7 +151,6 @@ class ProblemAPI(Resource):
 
 
 class EdgeAPI(Resource):
-    # TODO ask if recursion is ok
     def post(self):
         data = request.get_json()
 
@@ -169,12 +168,38 @@ class EdgeAPI(Resource):
         if not lower_node:
             return {'error': 'Node (problem) with id {} doesn\'t exist'.format(lower_node_id)}, 409
 
-        # if Edge.query.filter(Edge.lower_id == lower_node_id and Edge.upper_id == upper_node_id).first():
-        #     return {'error': 'Edge already exists'}, 409
+        '''if Edge.query.filter(Edge.knowledge_space_id == knowledge_space_id
+                             and Edge.lower_id == lower_node_id
+                             and Edge.upper_id == upper_node_id).first():
+            return {'error': 'Edge already exists'}, 409'''
 
-        if lower_node_id in upper_node.json_format()['upper_edge_ids']:
-           return {'error': '[RECURSION] - Lower node (id: {}) already exists as an upper edge for upper node (id: {})'
-                   .format(lower_node_id, upper_node_id)}, 409
+        # backwards cycle check
+        end = False
+        l_n = lower_node
+        while not end:
+            if not l_n.json_format()['lower_edge_ids']:
+                break
+            if upper_node_id in l_n.json_format()['lower_edge_ids']:
+                return {'error': '[RECURSION] - Lower node (id: {}) already has upper edges'}, 409
+            else:
+                if l_n.json_format()['lower_edge_ids']:
+                    l_n = Problem.query.filter(Problem.id == l_n.json_format()['lower_edge_ids'][0]).first()
+                else:
+                    end = True
+
+        # forward cycle check
+        end = False
+        u_n = upper_node
+        while not end:
+            if not u_n.json_format()['lower_edge_ids']:
+                break
+            if lower_node_id in u_n.json_format()['lower_edge_ids']:
+                return {'error': '[RECURSION] - Lower node (id: {}) already has upper edges'}, 409
+            else:
+                if u_n.json_format()['lower_edge_ids']:
+                    u_n = Problem.query.filter(Problem.id == u_n.json_format()['lower_edge_ids'][0]).first()
+                else:
+                    end = True
 
         new_edge = Edge(lower_node, upper_node, knowledge_space_id)
         new_edge.insert()
@@ -183,6 +208,7 @@ class EdgeAPI(Resource):
 
     def get(self):
         return [edge.json_format() for edge in Edge.query.all()], 200
+
 
 class KnowledgeSpaceAPI(Resource):
     def post(self):
@@ -217,6 +243,7 @@ class KnowledgeSpaceAPI(Resource):
         knowledge_space = KnowledgeSpace.query.get(int(id))
         return knowledge_space.json_format(), 200
 
+
 api = Api(app)
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
@@ -225,6 +252,7 @@ api.add_resource(CreateTestTake, '/test_take')
 api.add_resource(ProblemAPI, '/problem')
 api.add_resource(EdgeAPI, '/edge')
 api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
+
 
 @app.route('/')
 def index():
@@ -265,6 +293,7 @@ def getTestTake(id):
         "test": test.json_format()
     }
     return ret, 200
+
 
 @app.route("/knowledge_space/<int:id>")
 def getKnowledgeSpace(id):

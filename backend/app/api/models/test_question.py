@@ -8,8 +8,8 @@ class TestQuestion(db.Model):
     title = db.Column(db.String(500), nullable=False)
     points = db.Column(db.Integer, nullable=False)
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'), nullable=False)
-    test_question_answers = db.relationship('TestQuestionAnswer', backref='test_question', lazy=True)
-    test_take_answers = db.relationship('TestTakeAnswer', backref='test_question', lazy=True)
+    test_question_answers = db.relationship('TestQuestionAnswer', backref='test_question', lazy='subquery')
+    test_take_answers = db.relationship('TestTakeAnswer', backref='test_question', lazy='subquery')
 
     def __init__(self, title, points, test_id):
         self.title = title
@@ -29,10 +29,10 @@ class TestQuestion(db.Model):
 
     def json_format(self):
         return {
-            'id': self.id,
-            'title': self.title,
-            'points': self.points,
-            'test_id': self.test_id,
-            'test_question_answers': [test_question_answer.json_format() for test_question_answer in self.test_question_answers],
-            'test_take_answers': [test_take_answer.json_format() for test_take_answer in self.test_take_answers]
+            "id": self.id,
+            "title": self.title,
+            "points": self.points,
+            "test_id": self.test_id,
+            "test_question_answers": [test_question_answer.json_format() for test_question_answer in self.test_question_answers],
+            "test_take_answers": [test_take_answer.json_format() for test_take_answer in self.test_take_answers]
         }

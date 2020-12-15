@@ -8,8 +8,8 @@ class TestModel(db.Model):
     title = db.Column(db.String(200), nullable=False)
     max_score = db.Column(db.Integer)
     professor_id = db.Column(db.Integer, db.ForeignKey('professor.id'), nullable=False)
-    test_questions = db.relationship('TestQuestion', backref='test', lazy=True)
-    test_takes = db.relationship('TestTake', backref='test', lazy=True)
+    test_questions = db.relationship('TestQuestion', backref='test', lazy='subquery')
+    test_takes = db.relationship('TestTake', backref='test', lazy='subquery')
 
     def __init__(self, title, max_score, professor_id):
         self.title = title
@@ -29,10 +29,10 @@ class TestModel(db.Model):
 
     def json_format(self):
         return {
-            'id': self.id,
-            'title': self.title,
-            'max_score': self.max_score,
-            'professor_id': self.professor_id,
-            'test_questions': [test_question.json_format() for test_question in self.test_questions],
-            'test_takes': [test_take.json_format() for test_take in self.test_takes]
+            "id": self.id,
+            "title": self.title,
+            "max_score": self.max_score,
+            "professor_id": self.professor_id,
+            "test_questions": [test_question.json_format() for test_question in self.test_questions],
+            "test_takes": [test_take.json_format() for test_take in self.test_takes]
         }
