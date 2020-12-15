@@ -1,25 +1,38 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import { Sidebar, InputItem, DropdownItem, Icon, Item, Logo, LogoText } from 'react-sidebar-ui'
+
 import {
-  Row, Col, Card, CardHeader, CardBody, FormGroup, Label, Form, Input, InputGroup, InputGroupAddon,
-  InputGroupText, Button, Collapse, FormText, Dropdown, DropdownToggle, DropdownMenu, ListGroup, ListGroupItem,
-  Modal, ModalBody, ModalFooter, ModalHeader, CardFooter
-} from "reactstrap";
+  CRow,
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CCardFooter,
+  CLabel,
+  CInput,
+  CButton,
+  CCollapse,
+  CContainer,
+  CCol,
+  CFade,
+  CLink,
+  CFormGroup,
+  CInputCheckbox
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
 
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
-class TestsPage extends Component {
+class TakeTest extends Component {
   constructor(props) {
     super(props);
     this.state = {
       accordion: [],
       test: {
+        title: "",
+        test_questions: [{
           title: "",
-          test_questions: [{
-              title:"",
-              test_question_answers:[]
-          }]
+          test_question_answers: []
+        }]
       },
     };
 
@@ -61,73 +74,84 @@ class TestsPage extends Component {
     });
   }
 
-  handleChange(question, answer){
-      let temp = this.state.test
-      temp.test_questions[question].test_question_answers[answer].isCorrect = !temp.test_questions[question].test_question_answers[answer].isCorrect
-      this.setState({test: temp})
+  handleChange(question, answer) {
+    let temp = this.state.test
+    temp.test_questions[question].test_question_answers[answer].isCorrect = !temp.test_questions[question].test_question_answers[answer].isCorrect
+    this.setState({ test: temp })
   }
 
-  submitAnswers(){
+  submitAnswers() {
     const { id } = this.props.match.params;
     let data = {
-        student_id: 1,
-        test_id: id,
-        score: 0,
-        test: this.state.test
+      student_id: 1,
+      test_id: id,
+      score: 0,
+      test: this.state.test
     }
     axios({
-        method: 'post',
-        url: url + 'test_take',
-        //headers: { "Authorization": AuthStr } ,   
-        data: data      
-      }).then((response) => {
-        this.props.history.push('/testDone/' + response.data)
-      }, (error) => {
-        console.log(error);
-      });   
+      method: 'post',
+      url: url + 'test_take',
+      //headers: { "Authorization": AuthStr } ,   
+      data: data
+    }).then((response) => {
+      this.props.history.push('/tests/test/' + response.data)
+    }, (error) => {
+      console.log(error);
+    });
   }
 
   render() {
     return (
       <div>
-          <Card style={{ backgroundColor: "lightblue", margin: "10px", padding: "2px" }}>
-            <CardHeader>
+        <CCol xl="12" lg="12" md="12" sm="12">
+          <CCard>
+            <CCardHeader>
               <h1>{this.state.test.title}</h1>
-            </CardHeader>
-              <CardBody style={{ border: "3px solid lightblue", padding: "5px" }}>
+            </CCardHeader>
+            <CCardBody>
+              <div id="accordion">
                 {(this.state.test.test_questions).map((question, index) =>
-                  <Row>
-                    <Card style={{ backgroundColor: "whitesmoke", margin:"10px" }}>
-                      <CardHeader style={{ padding: "3px" }}>
-                      <h2 hidden={!this.state.accordion[index]} onClick={() => this.toggleAccordion(index)} >{question.title}
-                <i style={{ marginLeft: "10px" }} class="fas fa-angle-up"></i>
-              </h2>
-              <h2 hidden={this.state.accordion[index]} onClick={() => this.toggleAccordion(index)}>
-                {question.title}
-                <i style={{ marginLeft: "10px" }} class="fas fa-angle-down"></i>
-              </h2>                      </CardHeader>
-              <Collapse hidden={!this.state.accordion[index]} isOpen={this.state.accordion[index]} data-parent="#accordion" id={index} aria-labelledby={index}>
-                      <CardBody>
+                  <CCard style={{ margin: "10px" }} className="mb-0">
+                    <CCardHeader id="headingOne">
+                      <CButton
+                        block
+                        color="link"
+                        className="text-left m-0 p-0"
+                        onClick={() => this.toggleAccordion(index)}
+                      >
+                        <h5 className="m-0 p-0">{question.title}</h5>
+                      </CButton>
+                    </CCardHeader>
+                    <CCollapse show={this.state.accordion[index]}>
+                      <CCardBody>
                         {(question.test_question_answers).map((answer, indexA) =>
-                          <Card style={{ margin: "5px" }}>
-                              <Label style={{marginRight:"10px"}}>{indexA + 1}. {answer.title}</Label>
-                              <Input type="checkbox" value={answer.isCorrect} checked={answer.isCorrect}
-                                     onChange={event => this.handleChange(index, indexA)}/>
-                          </Card>
+
+                          <CFormGroup variant="checkbox" className="checkbox">
+                            <br></br>
+                            <CInputCheckbox
+                              id="isCorrect"
+                              name="isCorrect"
+                              value={answer.isCorrect}
+                              checked={answer.isCorrect}
+                              onChange={event => this.handleChange(index, indexA)}
+                            />
+                            <CLabel variant="checkbox" className="form-check-label" htmlFor="isCorrect">{indexA + 1}. {answer.title}</CLabel>
+                          </CFormGroup>
                         )}
-                      </CardBody>
-                      </Collapse>
-                    </Card>
-                  </Row>
+                      </CCardBody>
+                    </CCollapse>
+                  </CCard>
                 )}
-              </CardBody>
-              <CardFooter>
-              <Button style={{ backgroundColor: "lightgreen", marginLeft: "10px", height:"40px" }} onClick={event => this.submitAnswers()}>Submit</Button>
-              </CardFooter>
-          </Card>
+              </div>
+            </CCardBody>
+            <CCardFooter>
+              <CButton color="success" style={{ marginLeft: "10px", height: "40px" }} onClick={event => this.submitAnswers()}>Submit</CButton>
+            </CCardFooter>
+          </CCard>
+        </CCol>
       </div>
     );
   }
 }
 
-export default TestsPage;
+export default TakeTest;

@@ -3,19 +3,18 @@ import React from 'react';
 const StudentsPage = React.lazy(() => import('./views/pages/StudentsPage'))
 const TestsPage = React.lazy(() => import('./views/pages/TestsPage'))
 const NewTest = React.lazy(() => import('./views/pages/NewTest'))
+const TakeTest = React.lazy(() => import('./views/pages/TakeTest'))
+const TestPage = React.lazy(() => import('./views/pages/TestPage'))
 const Graph = React.lazy(() => import('./views/pages/Graph/Graph.js'));
 const KnowledgeSpace = React.lazy(() => import('./views/pages/KnowledgeSpace/KnowledgeSpace.js'));
 
 const Toaster = React.lazy(() => import('./views/notifications/toaster/Toaster'));
 const Tables = React.lazy(() => import('./views/base/tables/Tables'));
 
-const Breadcrumbs = React.lazy(() => import('./views/base/breadcrumbs/Breadcrumbs'));
 const Cards = React.lazy(() => import('./views/base/cards/Cards'));
-const Carousels = React.lazy(() => import('./views/base/carousels/Carousels'));
 const Collapses = React.lazy(() => import('./views/base/collapses/Collapses'));
 const BasicForms = React.lazy(() => import('./views/base/forms/BasicForms'));
 
-const Jumbotrons = React.lazy(() => import('./views/base/jumbotrons/Jumbotrons'));
 const ListGroups = React.lazy(() => import('./views/base/list-groups/ListGroups'));
 const Navbars = React.lazy(() => import('./views/base/navbars/Navbars'));
 const Navs = React.lazy(() => import('./views/base/navs/Navs'));
@@ -38,8 +37,6 @@ const Brands = React.lazy(() => import('./views/icons/brands/Brands'));
 const Alerts = React.lazy(() => import('./views/notifications/alerts/Alerts'));
 const Badges = React.lazy(() => import('./views/notifications/badges/Badges'));
 const Modals = React.lazy(() => import('./views/notifications/modals/Modals'));
-const Colors = React.lazy(() => import('./views/theme/colors/Colors'));
-const Typography = React.lazy(() => import('./views/theme/typography/Typography'));
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'));
 const Users = React.lazy(() => import('./views/users/Users'));
 const User = React.lazy(() => import('./views/users/User'));
@@ -47,16 +44,10 @@ const User = React.lazy(() => import('./views/users/User'));
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', component: Dashboard },
-  { path: '/theme', name: 'Theme', component: Colors, exact: true },
-  { path: '/theme/colors', name: 'Colors', component: Colors },
-  { path: '/theme/typography', name: 'Typography', component: Typography },
   { path: '/base', name: 'Base', component: Cards, exact: true },
-  { path: '/base/breadcrumbs', name: 'Breadcrumbs', component: Breadcrumbs },
   { path: '/base/cards', name: 'Cards', component: Cards },
-  { path: '/base/carousels', name: 'Carousel', component: Carousels },
   { path: '/base/collapses', name: 'Collapse', component: Collapses },
   { path: '/base/forms', name: 'Forms', component: BasicForms },
-  { path: '/base/jumbotrons', name: 'Jumbotrons', component: Jumbotrons },
   { path: '/base/list-groups', name: 'List Groups', component: ListGroups },
   { path: '/base/navbars', name: 'Navbars', component: Navbars },
   { path: '/base/navs', name: 'Navs', component: Navs },
@@ -88,9 +79,12 @@ const routes = [
 
   { path: '/students', exact:true, name: 'Students', component: StudentsPage},
   { path: '/tests', exact:true, name: 'Tests', component: TestsPage},
-  { path: '/newTest', exact:true, name: 'Tests', component: NewTest},
+  { path: '/tests/newTest', exact:true, name: 'New Test', component: NewTest},
   { path: '/knowledgeSpace/:id', exact: true, name: 'Graph', component: Graph },
-  { path: '/knowledgeSpace', exact: true, name: 'Knowledge Spaces', component: KnowledgeSpace }
+  { path: '/knowledgeSpace', exact: true, name: 'Knowledge Spaces', component: KnowledgeSpace },
+  { path: '/tests/takeTest/:id', exact:true, name: 'Test', component: TakeTest},
+  { path: '/tests/test/:id', exact:true, name: 'Test', component: TestPage}
+  
 ];
 
 export default routes;

@@ -14,22 +14,6 @@ const nav = [
   },
   {
     _tag: 'CSidebarNavTitle',
-    _children: ['Theme']
-  },
-  {
-    _tag: 'CSidebarNavItem',
-    name: 'Colors',
-    to: '/theme/colors',
-    icon: 'cil-drop',
-  },
-  {
-    _tag: 'CSidebarNavItem',
-    name: 'Typography',
-    to: '/theme/typography',
-    icon: 'cil-pencil',
-  },
-  {
-    _tag: 'CSidebarNavTitle',
     _children: ['Components']
   },
   {
@@ -40,18 +24,8 @@ const nav = [
     _children: [
       {
         _tag: 'CSidebarNavItem',
-        name: 'Breadcrumb',
-        to: '/base/breadcrumbs',
-      },
-      {
-        _tag: 'CSidebarNavItem',
         name: 'Cards',
         to: '/base/cards',
-      },
-      {
-        _tag: 'CSidebarNavItem',
-        name: 'Carousel',
-        to: '/base/carousels',
       },
       {
         _tag: 'CSidebarNavItem',
@@ -62,11 +36,6 @@ const nav = [
         _tag: 'CSidebarNavItem',
         name: 'Forms',
         to: '/base/forms',
-      },
-      {
-        _tag: 'CSidebarNavItem',
-        name: 'Jumbotron',
-        to: '/base/jumbotrons',
       },
       {
         _tag: 'CSidebarNavItem',
@@ -220,24 +189,6 @@ const nav = [
     },
   },
   {
-    _tag: 'CSidebarNavDivider'
-  },
-  {
-    _tag: 'CSidebarNavTitle',
-    _children: ['Extras'],
-  },
-  {
-    _tag: 'CSidebarNavItem',
-    name: 'Disabled',
-    icon: 'cil-ban',
-    badge: {
-      color: 'secondary',
-      text: 'NEW',
-    },
-    addLinkClass: 'c-disabled',
-    'disabled': true
-  },
-  {
     _tag: 'CSidebarNavDivider',
     className: 'm-2'
   },
@@ -278,6 +229,24 @@ const nav = [
   {
     _tag: 'CSidebarNavDivider',
     className: 'm-2'
+  },
+  {
+    _tag: 'CSidebarNavItem',
+    name: 'Students',
+    to: '/students',
+    icon: <CIcon name="cil-people" customClasses="c-sidebar-nav-icon"/>
+  },
+  {
+    _tag: 'CSidebarNavItem',
+    name: 'Tests',
+    to: '/tests',
+    icon: <CIcon name="cil-pencil" customClasses="c-sidebar-nav-icon"/>
+  },
+  {
+    _tag: 'CSidebarNavItem',
+    name: 'Knowledge Spaces',
+    to: '/knowledgeSpace',
+    icon: <CIcon name="cil-bookmark" customClasses="c-sidebar-nav-icon"/>
   }
 ]
 
