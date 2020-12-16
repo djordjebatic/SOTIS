@@ -262,9 +262,9 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
     this.saveEdge = this.saveEdge.bind(this)
   }
 
-  componentDidMount(){
-    this.getKnowledgeSpace()
-}
+  // componentDidMount(){
+  //   this.getKnowledgeSpace()
+  // }
 
 saveGraph(graph){
   const { id } = this.props.match.params;
@@ -366,8 +366,10 @@ createGraph(knowledgeSpace){
       data: data
   }).then((response) => {
       this.getKnowledgeSpace()
+      return true
   }, (error) => {
       console.log(error);
+      return false
   });
   }
 
@@ -513,7 +515,6 @@ createGraph(knowledgeSpace){
       x,
       y,
     };
-
     graph.nodes = [...graph.nodes, viewNode];
     this.setState({ graph });
     this.saveGraph(graph)
@@ -552,15 +553,20 @@ createGraph(knowledgeSpace){
       type,
     };
 
-    // Only add the edge when the source node is not the same as the target
-    if (viewEdge.source !== viewEdge.target) {
-      graph.edges = [...graph.edges, viewEdge];
-      this.setState({
-        graph,
-        selected: viewEdge,
-      });
+    //const fine = this.saveEdge(viewEdge)
+
+    if (this.saveEdge(viewEdge)) {
+      // Only add the edge when the source node is not the same as the target
+      if (viewEdge.source !== viewEdge.target) {
+        graph.edges = [...graph.edges, viewEdge];
+        this.setState({
+          graph,
+          selected: viewEdge,
+        });
+      }
     }
-    this.saveEdge(viewEdge)
+
+    this,getKnowledgeSpace();
   };
 
   // Called when an edge is reattached to a different target.
@@ -658,7 +664,7 @@ createGraph(knowledgeSpace){
     const { nodes, edges } = this.state.graph;
     const selected = this.state.selected;
     const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
-
+    this.state.getKnowledgeSpace();
     return (
       <>
             <CCol xs="12" lg="12">
