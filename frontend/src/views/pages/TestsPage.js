@@ -85,7 +85,7 @@ class TestsPage extends Component {
   render() {
     return (
       <>
-        <CButton style={{ marginLeft: "10px", marginBottom: "20px" }} color="success" onClick={event => this.props.history.push('/newTest')}>
+        <CButton style={{ marginLeft: "10px", marginBottom: "20px" }} color="success" onClick={event => this.props.history.push('/tests/newTest')}>
           +
         </CButton>
         <CRow>
@@ -99,7 +99,7 @@ class TestsPage extends Component {
                       <CLink className="card-header-action" onClick={() => this.setCollapsed(index)}>
                         <CIcon name={this.state.accordion[index] ? 'cil-chevron-bottom' : 'cil-chevron-top'} />
                       </CLink>
-                      <CLink className="card-header-action" onClick={() => this.setShowCard(true)}>
+                      <CLink className="card-header-action">
                         <CIcon name="cil-x-circle" />
                       </CLink>
                     </div>
@@ -108,15 +108,15 @@ class TestsPage extends Component {
                     <CCardBody>
                       <CRow>
                         {(test.test_questions).map((question, indexQ) =>
-                          <CCol xs="12" sm="6" md="4">
-                            <CCard style={{ backgroundColor: "whitesmoke" }}>
-                              <CCardHeader style={{ padding: "3px" }}>
+                          <CCol xs="12" sm="6" md="4" lg="4">
+                            <CCard style={{ backgroundColor: "whitesmoke", margin:"1px" }}>
+                              <CCardHeader>
                                 {indexQ + 1}. {question.title} ({question.points})
                       </CCardHeader>
-                              <CCardBody>
+                              <CCardBody style={{padding:"3px"}}>
                                 {(question.test_question_answers).map((answer, indexA) =>
-                                  <CCard style={{ margin: "5px" }}>
-                                    <label style={{ marginLeft: "20px" }}>{indexA + 1}. {answer.title}</label>
+                                  <CCard style={{ margin: "3px" }}>
+                                    <label>{indexA + 1}. {answer.title}</label>
                                   </CCard>
                                 )}
                               </CCardBody>
@@ -126,7 +126,7 @@ class TestsPage extends Component {
                       </CRow>
                     </CCardBody>
                     <CCardFooter>
-                      <CButton onClick={event => this.props.history.push('/takeTest/' + test.id)} >Take test</CButton>
+                      <CButton color="primary" onClick={event => this.props.history.push('/tests/takeTest/' + test.id)} >Take test</CButton>
                     </CCardFooter>
                   </CCollapse>
                 </CCard>
