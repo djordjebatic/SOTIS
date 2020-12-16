@@ -30,9 +30,9 @@ class Professor(db.Model):
 
     def json_format(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'last_name': self.last_name,
-            'username': self.username,
-            'tests_created': [test.json_format() for test in self.tests_created]
+            "id": self.id,
+            "name": self.name,
+            "last_name": self.last_name,
+            "username": self.username,
+            "tests_created": [test.json_format() for test in self.tests_created]
         }

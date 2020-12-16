@@ -29,10 +29,10 @@ class TestTakeAnswer(db.Model):
 
     def json_format(self):
         return {
-            'id': self.id,
-            'test_take_id': self.test_take_id,
-            'test_question_id': self.test_question_id,
-            'test_question_answer_id': self.test_question_answer_id,
-            'selected': self.selected
+            "id": self.id,
+            "test_take_id": self.test_take_id,
+            "test_question_id": self.test_question_id,
+            "test_question_answer_id": self.test_question_answer_id,
+            "selected": self.selected
         }
 
