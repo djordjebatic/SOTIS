@@ -10,6 +10,7 @@ class TestQuestion(db.Model):
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'), nullable=False)
     test_question_answers = db.relationship('TestQuestionAnswer', backref='test_question', lazy='subquery')
     test_take_answers = db.relationship('TestTakeAnswer', backref='test_question', lazy='subquery')
+    problem = db.relationship('Problem', uselist=False, backref='test_question', lazy='subquery')
 
     def __init__(self, title, points, test_id):
         self.title = title
@@ -28,11 +29,16 @@ class TestQuestion(db.Model):
         db.session.commit()
 
     def json_format(self):
+        if self.problem:
+            problem_id = self.problem.id
+        else:
+            problem_id = ''
         return {
             "id": self.id,
             "title": self.title,
             "points": self.points,
             "test_id": self.test_id,
+            "problem_id": problem_id,
             "test_question_answers": [test_question_answer.json_format() for test_question_answer in self.test_question_answers],
             "test_take_answers": [test_take_answer.json_format() for test_take_answer in self.test_take_answers]
         }

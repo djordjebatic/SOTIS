@@ -52,126 +52,126 @@ export type IGraph = {
 // elsewhere in the App or be generated from some other state upstream of this component.
 const sample: IGraph = {
   edges: [
-    {
-      handleText: '5',
-      handleTooltipText: '5',
-      source: 'start1',
-      target: 'a1',
-      type: SPECIAL_EDGE_TYPE,
-    },
-    {
-      handleText: '5',
-      handleTooltipText: 'This edge connects Node A and Node B',
-      source: 'a1',
-      target: 'a2',
-      type: SPECIAL_EDGE_TYPE,
-    },
-    {
-      handleText: '54',
-      source: 'a2',
-      target: 'a4',
-      type: EMPTY_EDGE_TYPE,
-    },
-    {
-      handleText: '54',
-      source: 'a1',
-      target: 'a3',
-      type: EMPTY_EDGE_TYPE,
-    },
-    {
-      handleText: '54',
-      source: 'a3',
-      target: 'a4',
-      type: EMPTY_EDGE_TYPE,
-    },
-    {
-      handleText: '54',
-      source: 'a1',
-      target: 'a5',
-      type: EMPTY_EDGE_TYPE,
-    },
-    {
-      handleText: '54',
-      source: 'a4',
-      target: 'a1',
-      type: EMPTY_EDGE_TYPE,
-    },
-    {
-      handleText: '54',
-      source: 'a1',
-      target: 'a6',
-      type: EMPTY_EDGE_TYPE,
-    },
-    {
-      handleText: '24',
-      source: 'a1',
-      target: 'a7',
-      type: EMPTY_EDGE_TYPE,
-    },
+    // {
+    //   handleText: '5',
+    //   handleTooltipText: '5',
+    //   source: 'start1',
+    //   target: 'a1',
+    //   type: SPECIAL_EDGE_TYPE,
+    // },
+    // {
+    //   handleText: '5',
+    //   handleTooltipText: 'This edge connects Node A and Node B',
+    //   source: 'a1',
+    //   target: 'a2',
+    //   type: SPECIAL_EDGE_TYPE,
+    // },
+    // {
+    //   handleText: '54',
+    //   source: 'a2',
+    //   target: 'a4',
+    //   type: EMPTY_EDGE_TYPE,
+    // },
+    // {
+    //   handleText: '54',
+    //   source: 'a1',
+    //   target: 'a3',
+    //   type: EMPTY_EDGE_TYPE,
+    // },
+    // {
+    //   handleText: '54',
+    //   source: 'a3',
+    //   target: 'a4',
+    //   type: EMPTY_EDGE_TYPE,
+    // },
+    // {
+    //   handleText: '54',
+    //   source: 'a1',
+    //   target: 'a5',
+    //   type: EMPTY_EDGE_TYPE,
+    // },
+    // {
+    //   handleText: '54',
+    //   source: 'a4',
+    //   target: 'a1',
+    //   type: EMPTY_EDGE_TYPE,
+    // },
+    // {
+    //   handleText: '54',
+    //   source: 'a1',
+    //   target: 'a6',
+    //   type: EMPTY_EDGE_TYPE,
+    // },
+    // {
+    //   handleText: '24',
+    //   source: 'a1',
+    //   target: 'a7',
+    //   type: EMPTY_EDGE_TYPE,
+    // },
   ],
   nodes: [
-    {
-      id: 'start1',
-      title: 'Start (0)',
-      type: SPECIAL_TYPE,
-    },
-    {
-      id: 'a1',
-      title: 'Node A (1)',
-      type: SPECIAL_TYPE,
-      x: 258.3976135253906,
-      y: 331.9783248901367,
-    },
-    {
-      id: 'a2',
-      subtype: SPECIAL_CHILD_SUBTYPE,
-      title: 'Node B (2)',
-      type: EMPTY_TYPE,
-      x: 593.9393920898438,
-      y: 260.6060791015625,
-    },
-    {
-      id: 'a3',
-      title: 'Node C (3)',
-      type: EMPTY_TYPE,
-      x: 237.5757598876953,
-      y: 61.81818389892578,
-    },
-    {
-      id: 'a4',
-      title: 'Node D (4)',
-      type: EMPTY_TYPE,
-      x: 600.5757598876953,
-      y: 600.81818389892578,
-    },
-    {
-      id: 'a5',
-      title: 'Node E (5)',
-      type: null,
-      x: 50.5757598876953,
-      y: 500.81818389892578,
-    },
-    {
-      id: 'a6',
-      title: 'Node E (6)',
-      type: SKINNY_TYPE,
-      x: 300,
-      y: 600,
-    },
-    {
-      id: 'a7',
-      title: 'Node F (7)',
-      type: POLY_TYPE,
-      x: 0,
-      y: 300,
-    },
-    {
-      id: 'a8',
-      title: 'Node G (8)',
-      type: COMPLEX_CIRCLE_TYPE,
-      x: -200,
-      y: 400,
-    },
+    // {
+    //   id: 'start1',
+    //   title: 'Start (0)',
+    //   type: SPECIAL_TYPE,
+    // },
+    // {
+    //   id: 'a1',
+    //   title: 'Node A (1)',
+    //   type: SPECIAL_TYPE,
+    //   x: 258.3976135253906,
+    //   y: 331.9783248901367,
+    // },
+    // {
+    //   id: 'a2',
+    //   subtype: SPECIAL_CHILD_SUBTYPE,
+    //   title: 'Node B (2)',
+    //   type: EMPTY_TYPE,
+    //   x: 593.9393920898438,
+    //   y: 260.6060791015625,
+    // },
+    // {
+    //   id: 'a3',
+    //   title: 'Node C (3)',
+    //   type: EMPTY_TYPE,
+    //   x: 237.5757598876953,
+    //   y: 61.81818389892578,
+    // },
+    // {
+    //   id: 'a4',
+    //   title: 'Node D (4)',
+    //   type: EMPTY_TYPE,
+    //   x: 600.5757598876953,
+    //   y: 600.81818389892578,
+    // },
+    // {
+    //   id: 'a5',
+    //   title: 'Node E (5)',
+    //   type: null,
+    //   x: 50.5757598876953,
+    //   y: 500.81818389892578,
+    // },
+    // {
+    //   id: 'a6',
+    //   title: 'Node E (6)',
+    //   type: SKINNY_TYPE,
+    //   x: 300,
+    //   y: 600,
+    // },
+    // {
+    //   id: 'a7',
+    //   title: 'Node F (7)',
+    //   type: POLY_TYPE,
+    //   x: 0,
+    //   y: 300,
+    // },
+    // {
+    //   id: 'a8',
+    //   title: 'Node G (8)',
+    //   type: COMPLEX_CIRCLE_TYPE,
+    //   x: -200,
+    //   y: 400,
+    // },
   ],
 };
 
@@ -245,7 +245,11 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
       errorTitle: '',
       buttonDisabled: true,
       knowledgeSpaceTitle: '',
+      knowledgeSpaceTestId: null,
+      testQuestions: [],
+      question_id: 1,
       knowledgeSpace: {
+        "test_id": null,
         "problems": [],
         "edges": []
       }
@@ -260,11 +264,20 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
     this.createGraph = this.createGraph.bind(this)
     this.saveGraph = this.saveGraph.bind(this)
     this.saveEdge = this.saveEdge.bind(this)
+    this.testQuestions = this.getTestQuestions.bind(this)
+    this.handleDropDown = this.handleDropDown.bind(this);
+
+
   }
 
-  // componentDidMount(){
-  //   this.getKnowledgeSpace()
-  // }
+  componentDidMount(){
+    this.getKnowledgeSpace()
+  }
+
+handleDropDown(e){
+  console.log("OPCIJA" + e.target.value)
+    this.setState({question_id: e.target.value})
+}
 
 saveGraph(graph){
   const { id } = this.props.match.params;
@@ -280,6 +293,7 @@ saveGraph(graph){
 }).then((response) => {
     this.setState({ knowledgeSpaces: response.data })
     this.createGraph(response.data)
+    
 }, (error) => {
     console.log(error);
 });
@@ -291,11 +305,25 @@ getKnowledgeSpace(){
     method: 'get',
     url: url + 'knowledge_space/' + id,
   }).then((response) => {
-    this.setState({knowledgeSpaceTitle: response.data.title})
+    this.setState({knowledgeSpaceTitle: response.data.title}, () => console.log(this.state.knowledgeSpaceTitle))
     this.createGraph(response.data)
+
+    axios.get(url + 'testquestions/' + response.data.test_id)
+        .then((resp) => {
+          this.setState({testQuestions: resp.data}, () => console.log(this.state.testQuestions))
+        })
+
   }, (error) => {
     console.log(error);
   });
+}
+
+getTestQuestions() {
+  console.log(this.state)
+  axios.get(url + 'testquestions/' + this.state.knowledgeSpaceTestId)
+        .then((resp) => {
+          this.setState({testQuestions: resp.data}, () => console.log(this.state.testQuestions))
+        })
 }
 
 createGraph(knowledgeSpace){
@@ -335,6 +363,7 @@ createGraph(knowledgeSpace){
     const { id } = this.props.match.params;
     let data = {
       "title": this.state.title,
+      "question_id": this.state.question_id,
       "knowledge_space_id": id,
       "x": 20.0,
       "y": 20.0
@@ -515,6 +544,7 @@ createGraph(knowledgeSpace){
       x,
       y,
     };
+
     graph.nodes = [...graph.nodes, viewNode];
     this.setState({ graph });
     this.saveGraph(graph)
@@ -553,8 +583,6 @@ createGraph(knowledgeSpace){
       type,
     };
 
-    //const fine = this.saveEdge(viewEdge)
-
     if (this.saveEdge(viewEdge)) {
       // Only add the edge when the source node is not the same as the target
       if (viewEdge.source !== viewEdge.target) {
@@ -565,8 +593,6 @@ createGraph(knowledgeSpace){
         });
       }
     }
-
-    this,getKnowledgeSpace();
   };
 
   // Called when an edge is reattached to a different target.
@@ -664,13 +690,15 @@ createGraph(knowledgeSpace){
     const { nodes, edges } = this.state.graph;
     const selected = this.state.selected;
     const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
-    this.state.getKnowledgeSpace();
+    const testQuestions = this.state.testQuestions;
+    const question_id = null; 
+
     return (
       <>
             <CCol xs="12" lg="12">
         <div className="graph-header">
             <h2>{this.state.knowledgeSpaceTitle}<CButton style={{marginBottom:"20px", float:"right"}} id="confirmButton" onClick={() => this.setState({showModal:true})} color="success" className="px-4">New problem</CButton>
-</h2>
+            </h2>
             <CModal 
               show={this.state.showModal} 
               onClose={() => this.resetAll()}
@@ -689,8 +717,24 @@ createGraph(knowledgeSpace){
                         placeholder="Title"
                       />
                     <CFormText className="help-block"><p style={{ color: "red" }}>{this.state.errorTitle}</p></CFormText>
-
-                    </CFormGroup>
+              </CFormGroup>
+              <CFormGroup>
+                      <CLabel htmlFor="problemTitle">Question</CLabel>
+                      <select
+                        value={this.state.question_id}
+                        onChange={this.handleDropDown}
+                      >
+                        <option disabled selected> -- select an option -- </option>
+                        {
+                            testQuestions.map(function (item) {
+                                if (item.problem_id === '') {
+                                  return <option value={item.id}>{item.title}</option>;
+                                }
+                            })
+                        }
+                    </select>
+                    <CFormText className="help-block"><p style={{ color: "red" }}>{this.state.errorTitle}</p></CFormText>
+              </CFormGroup>
               </CModalBody>
               <CModalFooter>
                 <CButton disabled={this.state.buttonDisabled} color="success" onClick={() => this.addProblem()}>Add problem</CButton>{' '}

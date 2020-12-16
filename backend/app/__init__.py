@@ -23,13 +23,16 @@ from app.api.models.problem_edge import Problem, Edge, KnowledgeSpace
 
 db.drop_all()
 db.create_all()
-ks = KnowledgeSpace('Prostor znanja')
+p = Professor("Mile", "Milic", "milojko50", "qwer1")
+p.insert()
+
+'''ks = KnowledgeSpace('Algebra', 1)
 ks.insert()
 
-p1 = Problem('Proba 1', ks.id, 1, 1)
-p2 = Problem('Proba 2', ks.id, 1, 1)
-p3 = Problem('Proba 3', ks.id, 1, 1)
-p4 = Problem('Proba 4', ks.id, 1, 1)
+p1 = Problem('Proba 1', ks.id, 100, 100)
+p2 = Problem('Proba 2', ks.id, 500, 500)
+p3 = Problem('Proba 3', ks.id, 500, 100)
+p4 = Problem('Proba 4', ks.id, 100, 500)
 p1.insert()
 p2.insert()
 p3.insert()
@@ -37,7 +40,5 @@ p4.insert()
 
 e1 = Edge(p1, p2, ks.id)
 e2 = Edge(p2, p3, ks.id)
-#e3 = Edge(p1, p3, ks.id)
 e1.insert()
-e2.insert()
-#e3.insert()
+e2.insert()'''

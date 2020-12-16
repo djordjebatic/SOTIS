@@ -10,6 +10,7 @@ class TestModel(db.Model):
     professor_id = db.Column(db.Integer, db.ForeignKey('professor.id'), nullable=False)
     test_questions = db.relationship('TestQuestion', backref='test', lazy='subquery')
     test_takes = db.relationship('TestTake', backref='test', lazy='subquery')
+    knowledge_spaces = db.relationship('KnowledgeSpace', backref='test', lazy='subquery')
 
     def __init__(self, title, max_score, professor_id):
         self.title = title

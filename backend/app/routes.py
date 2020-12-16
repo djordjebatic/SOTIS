@@ -10,6 +10,7 @@ from flask_restful import Resource, Api
 from flask import request
 import json
 
+
 class UserRegistration(Resource):
     def post(self):
         data = request.get_json()
@@ -109,6 +110,12 @@ class CreateTest(Resource):
         return [test.json_format() for test in TestModel.query.all()], 200
 
 
+class TestQuestionsAPI(Resource):
+    def get(self, test_id):
+        test = TestModel.query.filter(TestModel.id == test_id).first()
+        return test.json_format()['test_questions'], 200
+
+
 class CreateTestTake(Resource):
     def post(self):
         data = request.get_json()
@@ -141,7 +148,8 @@ class ProblemAPI(Resource):
         knowledge_space_id = data['knowledge_space_id']
         x = data['x']
         y = data['y']
-        new_problem = Problem(title, knowledge_space_id, x, y)
+        question_id = data['question_id']
+        new_problem = Problem(title, knowledge_space_id, x, y, question_id)
         new_problem.insert()
 
         return new_problem.json_format(), 200
@@ -214,7 +222,8 @@ class KnowledgeSpaceAPI(Resource):
     def post(self):
         data = request.get_json()
         title = data['title']
-        new_knowledge_space = KnowledgeSpace(title)
+        test_id = data['test_id']
+        new_knowledge_space = KnowledgeSpace(title, test_id)
         new_knowledge_space.insert()
 
         return new_knowledge_space.json_format(), 200
@@ -252,6 +261,7 @@ api.add_resource(CreateTestTake, '/test_take')
 api.add_resource(ProblemAPI, '/problem')
 api.add_resource(EdgeAPI, '/edge')
 api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
+api.add_resource(TestQuestionsAPI, '/testquestions/<test_id>')
 
 
 @app.route('/')
