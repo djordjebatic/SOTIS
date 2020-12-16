@@ -24,6 +24,7 @@ import CIcon from '@coreui/icons-react'
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
 const fields = ['Question','Answer', 'Checked', 'Correct answer', 'Score']
+const role = localStorage.getItem("role")
 
 class TestPage extends Component {
   constructor(props) {

@@ -51,16 +51,17 @@ class TestsPage extends Component {
     }
 
     createTest() {
+        let token = localStorage.getItem("loggedInUser")
+        let AuthStr = 'Bearer '.concat(token);    
         let test = {
             title: this.state.testTitle,
-            professor_id: 1,
             max_score: this.state.maxScore,
             questions: this.state.questions
         }
         axios({
             method: 'post',
             url: url + 'test',
-            //headers: { "Authorization": AuthStr } ,   
+            headers: { "Authorization": AuthStr } ,   
             data: test
         }).then((response) => {
             this.props.history.push('/tests')

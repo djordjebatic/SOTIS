@@ -9,7 +9,8 @@ import {
   CHeaderNavLink,
   CSubheader,
   CBreadcrumbRouter,
-  CLink
+  CLink,
+  CButton
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 
@@ -58,7 +59,11 @@ const TheHeader = () => {
           <CHeaderNavLink to="/students">Students</CHeaderNavLink>
         </CHeaderNavItem>
         </CHeaderNav>
-
+          <div className="d-md-down-none mfe-2 c-subheader-nav">
+            <CButton className="c-subheader-nav-link" href="#">
+              <CIcon name="cil-account-logout" alt="Settings" />&nbsp;Logout
+            </CButton>
+          </div>
         {/*
         <CHeaderNavItem  className="px-3">
           <CHeaderNavLink to="/users">Users</CHeaderNavLink>

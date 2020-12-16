@@ -30,9 +30,12 @@ class StudentsPage extends Component {
 }
 
   getStudents(){
+    let token = localStorage.getItem("loggedInUser")
+    let AuthStr = 'Bearer '.concat(token);     
     axios({
       method: 'get',
       url: url + 'student',       
+      headers: { "Authorization": AuthStr } ,   
   }).then((response) => {
       console.log(response);
       this.setState({students:response.data.students})
@@ -62,7 +65,19 @@ class StudentsPage extends Component {
                     <td>
                         {index + 1}
                     </td>
-                  )
+                  ),
+                'name':
+                 (item, index)=>(
+                    <td>
+                        {item.user.name}
+                    </td>
+                 ),
+                'last_name':
+                 (item, index)=>(
+                    <td>
+                        {item.user.last_name}
+                    </td>
+                 )
               }}
             />
             </CCardBody>

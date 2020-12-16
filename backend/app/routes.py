@@ -1,4 +1,4 @@
-from app import app
+from app import app, bcrypt, jwt
 from app.api.models.student import Student
 from app.api.models.test_question import TestQuestion
 from app.api.models.test_question_answer import TestQuestionAnswer
@@ -6,36 +6,61 @@ from app.api.models.test import TestModel
 from app.api.models.test_take_answer import TestTakeAnswer
 from app.api.models.test_take import TestTake
 from app.api.models.problem_edge import Problem, Edge, KnowledgeSpace
+from app.api.models.user import User
+from app.api.models.professor import Professor
 from flask_restful import Resource, Api
 from flask import request
-
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
+import datetime
 
 class UserRegistration(Resource):
     def post(self):
         data = request.get_json()
         # TODO change after adding roles (User class)
-        if Student.query.filter(Student.username == data['username']).first():
+        if User.query.filter(User.username == data['username']).first():
             return {'error': 'User already exists'}, 409
 
         # TODO hash pasword (flask_jwt)
-        student = Student(name=data['name'], last_name=data['last_name'], username=data['username'],
-                          password=data['password'])
+        user = User(name=data['name'], last_name=data['last_name'], username=data['username'],
+                          password=data['password'], email=data['email'], role='ROLE_STUDENT')
+        user.insert()
+        student = Student(user_id=user.id)
         student.insert()
 
         return student.json_format(), 200
 
 
 class UserLogin(Resource):
-    def post(self):
-        data = request.get_json()
-        # TODO change after adding roles (User class)
-        user = Student.query.filter(Student.username == data['username']).first()
+    # def post(self):
+    #     data = request.get_json()
+    #     # TODO change after adding roles (User class)
+    #     user = Student.query.filter(Student.username == data['username']).first()
+    #     if not user or bcrypt.check_password_hash(user.password, data['password']:
+    #         return {'error': 'Username and/or password don\'t match'}, 409
+    #     else:
+    #         # TODO access token (flask_jwt)
+    #         return user.json_format(), 200
 
-        if not user or user.password != data['password']:
-            return {'error': 'Username and/or password don\'t match'}, 409
-        else:
-            # TODO access token (flask_jwt)
-            return user.json_format(), 200
+    def post(self):
+            data = request.get_json()
+            user = User.query.filter_by(username=data.get('username')).first()
+            if not user or not bcrypt.check_password_hash(user.password, data['password']):
+                return {'error': 'Username and/or password don\'t match'}, 404
+            
+            #auth_token = user.encode_auth_token(user.username)
+            expires = datetime.timedelta(days=365)
+            auth_token = create_access_token(identity=user.username, expires_delta=expires)
+            if auth_token:
+                responseObject = {
+                    'status': 'success',
+                    'message': 'Successfully logged in.',
+                    'auth_token': auth_token,
+                    'role': user.role
+                }
+                return responseObject, 200
 
 
 class CreateTest(Resource):
@@ -85,11 +110,14 @@ class CreateTest(Resource):
         ]
     }
     """
-
+    @jwt_required
     def post(self):
         data = request.get_json()
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+        professor = Professor.query.filter_by(user_id=user.id).first()
         # TODO checks
-        test = TestModel(title=data['title'], professor_id=data['professor_id'], max_score=data['max_score'])
+        test = TestModel(title=data['title'], professor_id=professor.id, max_score=data['max_score'])
         test.insert()
         questions = data['questions']
 
@@ -217,6 +245,43 @@ class KnowledgeSpaceAPI(Resource):
         knowledge_space = KnowledgeSpace.query.get(int(id))
         return knowledge_space.json_format(), 200
 
+class UserAPI(Resource):
+    def get(self):
+        # get the auth token
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            auth_token = auth_header.split(" ")[1]
+        else:
+            auth_token = ''
+        if auth_token:
+            resp = User.decode_auth_token(auth_token)
+            if not isinstance(resp, str):
+                user = User.query.filter_by(id=resp).first()
+                responseObject = {
+                    'status': 'success',
+                    'data': {
+                        'user_id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                        'admin': user.admin,
+                        'name': user.name,
+                        'last_name': user.lastname
+                    }
+                }
+                return responseObject, 200
+            responseObject = {
+                'status': 'fail',
+                'message': resp
+            }
+            return responseObject, 401
+        else:
+            responseObject = {
+                'status': 'fail',
+                'message': 'Provide a valid auth token.'
+            }
+            return responseObject, 401
+
+
 api = Api(app)
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
@@ -225,6 +290,7 @@ api.add_resource(CreateTestTake, '/test_take')
 api.add_resource(ProblemAPI, '/problem')
 api.add_resource(EdgeAPI, '/edge')
 api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
+api.add_resource(UserAPI, '/user')
 
 @app.route('/')
 def index():
@@ -232,16 +298,11 @@ def index():
 
 
 @app.route('/student', methods=['POST', 'GET'])
+@jwt_required
 def handle_students():
+    #username = get_jwt_identity()
     students = Student.query.all()
-    result = [
-        {
-            "id": student.id,
-            "name": student.name,
-            "last_name": student.last_name
-        } for student in students
-    ]
-    return {"students": result}
+    return {"students": [student.json_format() for student in students]}, 200
 
 
 @app.route("/test/<int:id>")
@@ -271,3 +332,10 @@ def getKnowledgeSpace(id):
     knowledge_space = KnowledgeSpace.query.get(int(id))
 
     return knowledge_space.json_format(), 200
+
+@jwt.user_claims_loader
+def add_claims_to_access_token(identity):
+    user = User.query.filter(User.username == identity).first()
+    return {
+        'role': user.role
+    }

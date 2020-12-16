@@ -44,7 +44,9 @@ class Login extends Component {
         axios.post(url + 'login', this.state)
         .then((resp) => {
             //TODO authorization and role checking
-            localStorage.setItem('loggedInUserId', resp.data.id);
+            localStorage.setItem('loggedInUserId', resp.data.auth_token.sub);
+            localStorage.setItem("loggedInUser", resp.data.auth_token);
+            localStorage.setItem("role", resp.data.role);
             this.props.history.push('/newTest')
         })
         .catch((error) => NotificationManager.error('Wrong username or password', 'Error!', 4000))

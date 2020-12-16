@@ -3,11 +3,19 @@ from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
+
 
 app = flask.Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
 migrate = Migrate(app, db)
+jwt = JWTManager(app)
 CORS(app)
 
 from app import routes
@@ -19,8 +27,8 @@ from app.api.models.test_question_answer import TestQuestionAnswer
 from app.api.models.test_take import TestTake
 from app.api.models.test_take_answer import TestTakeAnswer
 from app.api.models.problem_edge import Problem, Edge, KnowledgeSpace
-db.drop_all()
-db.create_all()
+#db.drop_all()
+#db.create_all()
 '''db.drop_all()
 db.create_all()
 
