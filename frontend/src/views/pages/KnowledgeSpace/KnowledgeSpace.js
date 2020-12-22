@@ -17,9 +17,12 @@ import {
     CWidgetBrand
 } from '@coreui/react'
 
+import { RoleAwareComponent } from 'react-router-role-authorization'
+import {Redirect} from 'react-router-dom'
+
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
-class KnowledgeSpace extends Component {
+class KnowledgeSpace extends RoleAwareComponent {
     constructor(props) {
         super(props);
         this.state = {
@@ -29,6 +32,12 @@ class KnowledgeSpace extends Component {
             errorTitle: '',
             buttonDisabled: true
         };
+
+        let arr = [];
+        arr.push(localStorage.getItem('role'));
+        this.userRoles = arr;
+        this.allowedRoles = ['ROLE_PROFESSOR'];
+
 
         this.getKnowledgeSpaces = this.getKnowledgeSpaces.bind(this);
         this.addKnowledgeSpace = this.addKnowledgeSpace.bind(this);
@@ -115,7 +124,7 @@ class KnowledgeSpace extends Component {
     }
 
     render() {
-        return (
+        let ret = (
             <div>
                 <CCol col="6" sm="4" md="2" xl className="mb-3 mb-xl-0">
                     <CButton style={{ marginBottom: "20px" }} id="confirmButton" onClick={() => this.setState({ showModal: true })} color="success" className="px-4">New Knowledge Space</CButton>
@@ -165,6 +174,7 @@ class KnowledgeSpace extends Component {
                 </CModal>
             </div>
         );
+        return this.rolesMatched() ? ret : <Redirect to="/tests" />;
     }
 }
 

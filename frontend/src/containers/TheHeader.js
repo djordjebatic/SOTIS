@@ -1,5 +1,6 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
+import { useHistory } from "react-router-dom";
 import {
   CHeader,
   CToggler,
@@ -9,12 +10,14 @@ import {
   CHeaderNavLink,
   CSubheader,
   CBreadcrumbRouter,
-  CLink
+  CLink,
+  CButton
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 
 // routes config
 import routes from '../routes'
+import axios from 'axios'
 
 import { 
   TheHeaderDropdown,
@@ -22,6 +25,8 @@ import {
   TheHeaderDropdownNotif,
   TheHeaderDropdownTasks
 }  from './index'
+
+const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
 const TheHeader = () => {
   const dispatch = useDispatch()
@@ -35,6 +40,22 @@ const TheHeader = () => {
   const toggleSidebarMobile = () => {
     const val = [false, 'responsive'].includes(sidebarShow) ? true : 'responsive'
     dispatch({type: 'set', sidebarShow: val})
+  }
+
+  const history = useHistory();
+
+const logOut = () => {
+      axios({
+            method: 'post',
+            url: url + 'logout',
+           // headers: { "Authorization": AuthStr } ,   
+        }).then((response) => {
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("role");
+    history.push('/login');        }, (error) => {
+            console.log(error);
+        });
+
   }
 
   return (
@@ -58,7 +79,11 @@ const TheHeader = () => {
           <CHeaderNavLink to="/students">Students</CHeaderNavLink>
         </CHeaderNavItem>
         </CHeaderNav>
-
+          <div className="d-md-down-none mfe-2 c-subheader-nav">
+            <CButton className="c-subheader-nav-link" href="#" onClick ={e => logOut()}>
+              <CIcon name="cil-account-logout" alt="Settings" />&nbsp;Logout
+            </CButton>
+          </div>
         {/*
         <CHeaderNavItem  className="px-3">
           <CHeaderNavLink to="/users">Users</CHeaderNavLink>

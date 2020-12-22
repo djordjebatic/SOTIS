@@ -1,4 +1,5 @@
 from app import db
+from app.api.models.user import User
 
 """
 tests_taken = db.Table('tests_taken',
@@ -11,17 +12,11 @@ class Student(db.Model):
     __tablename__ = 'student'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    last_name = db.Column(db.String(200), nullable=False)
-    username = db.Column(db.String(200), nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    test_takes = db.relationship('TestTake', backref='student', lazy='subquery')
+    user_id = db.Column(db.Integer, db.ForeignKey('user_table.id'), nullable=False)
+    test_takes = db.relationship('TestTake', backref='student', lazy=True)
 
-    def __init__(self, name, last_name, username, password):
-        self.name = name
-        self.last_name = last_name
-        self.username = username
-        self.password = password
+    def __init__(self, user_id):
+        self.user_id = user_id
 
     def insert(self):
         db.session.add(self)
@@ -35,10 +30,9 @@ class Student(db.Model):
         db.session.commit()
 
     def json_format(self):
+        user = User.query.filter(User.id == self.user_id).first()
         return {
-            "id": self.id,
-            "name": self.name,
-            "last_name": self.last_name,
-            "username": self.username,
-            "test_takes": [test_take.json_format() for test_take in self.test_takes]
+            'id': self.id,
+            'user': user.json_format(),
+            'test_takes': [test_take.json_format() for test_take in self.test_takes]
         }

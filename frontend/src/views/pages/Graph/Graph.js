@@ -37,6 +37,9 @@ import GraphConfig, {
 
 import axios from 'axios'
 
+import { RoleAwareComponent } from 'react-router-role-authorization'
+import {Redirect} from 'react-router-dom'
+
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
 export type IGraph = {
@@ -254,6 +257,11 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
         "edges": []
       }
     };
+
+    let arr = [];
+    arr.push(localStorage.getItem('role'));
+    this.userRoles = arr;
+    this.allowedRoles = ['ROLE_PROFESSOR'];
 
     this.GraphView = React.createRef();
     this.knowledgeSpace = this.getKnowledgeSpace.bind(this);
@@ -693,7 +701,7 @@ createGraph(knowledgeSpace){
     const testQuestions = this.state.testQuestions;
     const question_id = null; 
 
-    return (
+    let ret = (
       <>
             <CCol xs="12" lg="12">
         <div className="graph-header">
@@ -798,6 +806,7 @@ createGraph(knowledgeSpace){
         </CCol>
       </>
     );
+    return ret;
   }
 }
 
