@@ -18,6 +18,8 @@ import {
   CCardFooter,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
+import * as _ from 'lodash'
+
 
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
@@ -107,7 +109,7 @@ class TestsPage extends Component {
                   <CCollapse show={this.state.accordion[index]}>
                     <CCardBody>
                       <CRow>
-                        {(test.test_questions).map((question, indexQ) =>
+                        {(_.sortBy(test.test_questions,"position")).map((question, indexQ) =>
                           <CCol xs="12" sm="6" md="4" lg="4">
                             <CCard style={{ backgroundColor: "whitesmoke", margin:"1px" }}>
                               <CCardHeader>
