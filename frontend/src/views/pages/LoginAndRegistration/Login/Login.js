@@ -44,7 +44,6 @@ class Login extends Component {
         axios.post(url + 'login', this.state)
         .then((resp) => {
             //TODO authorization and role checking
-            localStorage.setItem('loggedInUserId', resp.data.auth_token.sub);
             localStorage.setItem("loggedInUser", resp.data.auth_token);
             localStorage.setItem("role", resp.data.role);
             this.props.history.push('/newTest')

@@ -1,4 +1,5 @@
-from app import app, bcrypt, jwt
+from app import app, bcrypt, jwt, login_manager
+from app import professor_permission
 from app.api.models.student import Student
 from app.api.models.test_question import TestQuestion
 from app.api.models.test_question_answer import TestQuestionAnswer
@@ -7,14 +8,25 @@ from app.api.models.test_take_answer import TestTakeAnswer
 from app.api.models.test_take import TestTake
 from app.api.models.problem_edge import Problem, Edge, KnowledgeSpace
 from app.api.models.user import User
+from app.api.models.role import Role
 from app.api.models.professor import Professor
+from app.api.models.student import Student
 from flask_restful import Resource, Api
-from flask import request
+from flask import request, jsonify, current_app, session
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
-    get_jwt_identity
+    get_jwt_identity, get_jwt_claims
 )
+from flask_security import login_required, roles_accepted
+from flask_principal import Identity, AnonymousIdentity, identity_changed, identity_loaded, RoleNeed, UserNeed
+from flask_login import login_user, logout_user, current_user
+
 import datetime
+
+
+
+# if not current_user.is_authenticated:
+#     return current_app.login_manager.unauthorized()
 
 class UserRegistration(Resource):
     def post(self):
@@ -25,7 +37,9 @@ class UserRegistration(Resource):
 
         # TODO hash pasword (flask_jwt)
         user = User(name=data['name'], last_name=data['last_name'], username=data['username'],
-                          password=data['password'], email=data['email'], role='ROLE_STUDENT')
+                          password=data['password'], email=data['email'])
+        role = Role.query.filter(Role.name=='ROLE_STUDENT')
+        user.add_role(role)
         user.insert()
         student = Student(user_id=user.id)
         student.insert()
@@ -43,8 +57,10 @@ class UserLogin(Resource):
     #     else:
     #         # TODO access token (flask_jwt)
     #         return user.json_format(), 200
-
     def post(self):
+            if current_user.is_authenticated:
+                return 'user is already logged in', 403
+
             data = request.get_json()
             user = User.query.filter_by(username=data.get('username')).first()
             if not user or not bcrypt.check_password_hash(user.password, data['password']):
@@ -53,15 +69,39 @@ class UserLogin(Resource):
             #auth_token = user.encode_auth_token(user.username)
             expires = datetime.timedelta(days=365)
             auth_token = create_access_token(identity=user.username, expires_delta=expires)
+            login_user(user, remember = True)
+            
+            identity_changed.send(app,
+                                  identity=Identity(user.id))
+            # session['username'] = user.username
             if auth_token:
                 responseObject = {
                     'status': 'success',
                     'message': 'Successfully logged in.',
                     'auth_token': auth_token,
-                    'role': user.role
+                    'role': user.roles[0].name
                 }
                 return responseObject, 200
 
+# @app.before_request
+# def before_request():
+#     g.user = current_user
+#     print ('current_user: %s, g.user:, leaving bef_req' % (current_user))
+    
+
+@app.route('/logout', methods=['POST', 'GET'])
+def logout():
+    if current_user.is_authenticated:
+        logout_user()
+        # Remove session keys set by Flask-Principal
+        for key in ('identity.name', 'identity.auth_type'):
+            session.pop(key, None)
+
+        # Tell Flask-Principal the user is anonymous
+        identity_changed.send(current_app._get_current_object(),
+                            identity=AnonymousIdentity())
+        return 'Logged out', 200
+    return 'OK', 200
 
 class CreateTest(Resource):
     """
@@ -114,6 +154,9 @@ class CreateTest(Resource):
     def post(self):
         data = request.get_json()
         username = get_jwt_identity()
+
+        #role = get_jwt_claims()['role']
+
         user = User.query.filter_by(username=username).first()
         professor = Professor.query.filter_by(user_id=user.id).first()
         # TODO checks
@@ -138,11 +181,16 @@ class CreateTest(Resource):
 
 
 class CreateTestTake(Resource):
+    @jwt_required
     def post(self):
         data = request.get_json()
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+        student = Student.query.filter_by(user_id=user.id).first()
+        # TODO checks
         # TODO calculate score
         test = data['test']
-        test_take = TestTake(student_id=data['student_id'], test_id=data['test_id'], score=0)
+        test_take = TestTake(student_id=student.id, test_id=data['test_id'], score=0)
         test_take.insert()
 
         questions = test['test_questions']
@@ -254,9 +302,10 @@ class UserAPI(Resource):
         else:
             auth_token = ''
         if auth_token:
-            resp = User.decode_auth_token(auth_token)
-            if not isinstance(resp, str):
-                user = User.query.filter_by(id=resp).first()
+            #resp = User.decode_auth_token(auth_token)
+            username = get_jwt_identity()
+            if not isinstance(username, str):
+                user = User.query.filter_by(username=username).first()
                 responseObject = {
                     'status': 'success',
                     'data': {
@@ -271,7 +320,7 @@ class UserAPI(Resource):
                 return responseObject, 200
             responseObject = {
                 'status': 'fail',
-                'message': resp
+                'message': auth_token
             }
             return responseObject, 401
         else:
@@ -292,15 +341,54 @@ api.add_resource(EdgeAPI, '/edge')
 api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
 api.add_resource(UserAPI, '/user')
 
-@app.route('/')
-def index():
-    return "Hello World!"
 
+
+# def get_current_user():
+#     with current_app.request_context():
+#         return g.current_user
+
+
+# @login_manager.request_loader
+# def load_user_from_request(request):
+#     username = get_jwt_identity()
+#     user = User.query.find_by(username = username).first()
+#     return user
+
+@identity_loaded.connect_via(app)
+def on_identity_loaded(sender, identity):
+    # Set the identity user object
+    identity.user = current_user
+    # Add the UserNeed to the identity
+    if hasattr(current_user, 'id'):
+        identity.provides.add(UserNeed(current_user.id))
+
+    # Assuming the User model has a list of roles, update the
+    # identity with the roles that the user provides
+    if hasattr(current_user, 'roles'):
+        for role in current_user.roles:
+            identity.provides.add(RoleNeed(role.name))
+
+@login_manager.user_loader
+def load_user(userid):
+    return User.get(userid)
+
+
+# @principals.identity_loader
+# def read_identity_from_flask_login():
+#     if current_user.is_authenticated:
+#         return Identity(current_user.id)
+#     return AnonymousIdentity()
 
 @app.route('/student', methods=['POST', 'GET'])
 @jwt_required
+#@login_required
+#@roles_accepted('ROLE_PROFESSOR')
+#@rbac.allow(['PROFESSOR'], methods=['GET'], with_children=False)
+#@professor_permission.require(http_exception=403)
+#@professor_permission.require()
 def handle_students():
-    #username = get_jwt_identity()
+    username = get_jwt_identity()
+    print(username)
     students = Student.query.all()
     return {"students": [student.json_format() for student in students]}, 200
 
@@ -337,5 +425,14 @@ def getKnowledgeSpace(id):
 def add_claims_to_access_token(identity):
     user = User.query.filter(User.username == identity).first()
     return {
-        'role': user.role
+        'role': user.roles[0].name
     }
+
+@jwt.expired_token_loader
+def my_expired_token_callback(expired_token):
+    token_type = expired_token['type']
+    return jsonify({
+        'status': 401,
+        'sub_status': 42,
+        'msg': 'The {} token has expired'.format(token_type)
+    }), 401

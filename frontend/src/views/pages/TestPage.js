@@ -21,12 +21,15 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 
+import { RoleAwareComponent } from 'react-router-role-authorization'
+import {Redirect} from 'react-router-dom'
+
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
 const fields = ['Question','Answer', 'Checked', 'Correct answer', 'Score']
 const role = localStorage.getItem("role")
 
-class TestPage extends Component {
+class TestPage extends RoleAwareComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -45,6 +48,12 @@ class TestPage extends Component {
           }]
       },
     };
+
+    let arr = [];
+    arr.push(localStorage.getItem('role'));
+    this.userRoles = arr;
+    this.allowedRoles = ['ROLE_PROFESSOR', 'ROLE_STUDENT'];
+
 
     this.getTestTakeAnswer = this.getTestTake.bind(this)
     this.getChecked = this.getChecked.bind(this)
@@ -76,7 +85,7 @@ class TestPage extends Component {
   }
 
   render() {
-    return (
+    let ret =  (
       <div>
         <CCardHeader style={{backgroundColor:"whitesmoke"}}>
             <h2>{this.state.test.title}</h2>
@@ -124,6 +133,7 @@ class TestPage extends Component {
 
       </div>
     );
+    return this.rolesMatched() ? ret : <Redirect to="/tests" />;
   }
 }
 

@@ -2,6 +2,10 @@ import React, { Component } from 'react';
 import axios from 'axios';
 
 import {
+  Redirect,
+} from 'react-router-dom'
+
+import {
   CCard,
   CCardBody,
   CCardHeader,
@@ -9,11 +13,13 @@ import {
   CDataTable
 } from '@coreui/react'
 
+import { RoleAwareComponent } from 'react-router-role-authorization';
+
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
 const fields = ['#','name', 'last_name']
 
-class StudentsPage extends Component {
+class StudentsPage extends RoleAwareComponent {
   constructor(props)
   {
     super(props);
@@ -21,8 +27,12 @@ class StudentsPage extends Component {
       students: []          
     };
 
-    this.getStudents = this.getStudents.bind(this);
+    let arr = [];
+    arr.push(localStorage.getItem('role'));
+    this.userRoles = arr;
+    this.allowedRoles = ['ROLE_PROFESSOR', 'ROLE_STUDENT'];
 
+    this.getStudents = this.getStudents.bind(this);
   }
 
   componentDidMount(){
@@ -46,7 +56,7 @@ class StudentsPage extends Component {
 
 
   render() {
-    return (
+    let ret = (
       <CCol xs="12" lg="12">
           <CCard>
             <CCardHeader>
@@ -84,6 +94,7 @@ class StudentsPage extends Component {
           </CCard>
         </CCol>
     );
+    return this.rolesMatched() ? ret : <Redirect to="/tests" />;
   }
 }
 

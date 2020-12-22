@@ -1,27 +1,55 @@
-from app import db, bcrypt, app, jwt
+from app import db, bcrypt, app, jwt, login_manager
 import datetime
+from flask_security import UserMixin
 
+roles_users = db.Table(
+    'roles_users',
+    db.Column('user_id', db.Integer(), db.ForeignKey('user_table.id')),
+    db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
+)
 
-class User(db.Model):
+class User(db.Model, UserMixin):
+
     __tablename__ = 'user_table'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    email = db.Column(db.String(200), unique=True)
+    password = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(200), nullable=False)
     last_name = db.Column(db.String(200), nullable=False)
     username = db.Column(db.String(200), nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    email = db.Column(db.String(200), nullable=False)
     isAdmin = db.Column(db.Boolean, nullable=False, default=False)
-    role = db.Column(db.String(200), nullable=False)
+    active = db.Column(db.Boolean, nullable=False, default=False)
+    roles = db.relationship(
+        'Role',
+        secondary=roles_users,
+        backref=db.backref('users', lazy='dynamic')
+    )
 
-    def __init__(self, name, last_name, username, password, email, role, isAdmin=False):
+    def __str__(self):
+        return self.email
+
+    def __init__(self, name, last_name, username, password, email, isAdmin=False):
         self.name = name
         self.last_name = last_name
         self.username = username
         self.password = password
         self.email = email
+        self.active = True
         self.password = bcrypt.generate_password_hash(password).decode("utf-8")
-        self.role = role
+
+    def is_authenticated(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def is_active(self):
+        return True
+
+    def get_id(self):
+        object_id = self.id
+        return str(object_id)
 
     def insert(self):
         db.session.add(self)
@@ -40,8 +68,30 @@ class User(db.Model):
             'name': self.name,
             'last_name': self.last_name,
             'username': self.username,
-            'email': self.email
+            'email': self.email,
+            'role': self.roles[0].name
         }
+
+    def get_security_payload(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'last_name': self.last_name,
+            'username': self.username,
+            'email': self.email,
+            'role': self.roles[0].name
+        }
+
+    def add_role(self, role):
+        self.roles.append(role)
+
+    def add_roles(self, roles):
+        for role in roles:
+            self.add_role(role)
+
+    def get_roles(self):
+        for role in self.roles:
+            yield role
 
     def encode_auth_token(self, username):
         try:

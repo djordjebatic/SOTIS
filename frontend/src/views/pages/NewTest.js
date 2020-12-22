@@ -22,9 +22,12 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react';
 
+import { RoleAwareComponent } from 'react-router-role-authorization'
+import {Redirect} from 'react-router-dom'
+
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
-class TestsPage extends Component {
+class TestsPage extends RoleAwareComponent {
     constructor(props) {
         super(props);
         this.state = {
@@ -40,6 +43,12 @@ class TestsPage extends Component {
             answers: [],
             newAnswerModalTitle: ''
         };
+
+        let arr = [];
+        arr.push(localStorage.getItem('role'));
+        this.userRoles = arr;
+        this.allowedRoles = ['ROLE_PROFESSOR'];
+
 
         this.createTest = this.createTest.bind(this)
         this.cancel = this.cancel.bind(this)
@@ -140,7 +149,7 @@ class TestsPage extends Component {
     }
 
     render() {
-        return (
+        let ret = (
             <div>
                 <CModal
                     show={!this.state.hideNewAnswer}
@@ -267,6 +276,7 @@ class TestsPage extends Component {
                 </CCol>
             </div>
         );
+        return this.rolesMatched() ? ret : <Redirect to="/tests" />;
     }
 }
 
