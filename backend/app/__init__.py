@@ -68,7 +68,7 @@ u2.insert()
 stud = Student(u2.id)
 stud.insert()
 
-ks = KnowledgeSpace('Algebra', 1)
+'''ks = KnowledgeSpace('Algebra', 1)
 ks.insert()
 
 p1 = Problem('Proba 1', ks.id, 100, 100)

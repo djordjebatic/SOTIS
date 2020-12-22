@@ -30,7 +30,7 @@ class StudentsPage extends RoleAwareComponent {
     let arr = [];
     arr.push(localStorage.getItem('role'));
     this.userRoles = arr;
-    this.allowedRoles = ['ROLE_PROFESSOR', 'ROLE_STUDENT'];
+    this.allowedRoles = ['ROLE_PROFESSOR'];
 
     this.getStudents = this.getStudents.bind(this);
   }
