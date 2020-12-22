@@ -38,6 +38,7 @@ class Problem(db.Model):
     __tablename__ = 'problem'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    root = db.Column(db.Boolean)
     title = db.Column(db.String(200), nullable=False)
     x = db.Column(db.Float, nullable=False)
     y = db.Column(db.Float, nullable=False)
@@ -51,6 +52,7 @@ class Problem(db.Model):
         self.x = x
         self.y = y
         self.test_question_id = test_question_id
+        self.root = False
 
     def insert(self):
         db.session.add(self)
@@ -66,6 +68,7 @@ class Problem(db.Model):
     def json_format(self):
         return {
             "id": self.id,
+            "root": self.root,
             "title": self.title,
             "upper_edge_ids": [x.higher_node.id for x in self.lower_edges],
             "lower_edge_ids": [x.lower_node.id for x in self.upper_edges],

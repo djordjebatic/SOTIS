@@ -97,6 +97,8 @@ class CreateTest(Resource):
         for question in questions:
             new_question = TestQuestion(title=question['title'], points=question['points'], test_id=test.id)
             new_question.insert()
+            new_question.position = new_question.id
+            new_question.update()
 
             question_answers = question['answers']
             for answer in question_answers:
@@ -253,6 +255,55 @@ class KnowledgeSpaceAPI(Resource):
         return knowledge_space.json_format(), 200
 
 
+class FormatTestsAPI(Resource):
+    def post(self):
+        data = request.get_json()
+
+        # TODO check
+        ks_id = data['knowledge_space_id']
+
+        edges = Edge.query.filter(Edge.knowledge_space_id == ks_id).all()
+        nodes = Problem.query.filter(Problem.knowledge_space_id == ks_id).all()
+        print(len(nodes), len(edges))
+        if len(nodes) - len(edges) != 1:
+            return {'error': 'All nodes must be connected'}, 409
+
+        for edge in edges:
+            lower_node_id = edge.lower_id
+            root_node = Problem.query.filter(Problem.id == lower_node_id).first()
+            if not root_node.json_format()['lower_edge_ids'] and root_node.json_format()['upper_edge_ids']:
+                root_node.root = True
+                root_node.update()
+            else:
+                root_node.root = False
+                root_node.update()
+
+        visited = []
+        queue = []
+        i = 1
+        root_node = Problem.query.filter(Problem.root == True).first()
+        print(root_node.title)
+
+        visited.append(root_node.id)
+        queue.append(root_node)
+
+        while queue:
+            s = queue.pop(0)
+            node_question_id = s.test_question_id
+            question = TestQuestion.query.filter(TestQuestion.id == node_question_id).first()
+            question.position = i
+            question.update()
+            i += 1
+            print(question.title)
+
+            for neighbour_id in s.json_format()['upper_edge_ids']:
+                if neighbour_id not in visited:
+                    visited.append(neighbour_id)
+                    queue.append(Problem.query.filter(Problem.id == neighbour_id).first())
+
+        return [test.json_format() for test in TestModel.query.all()], 200
+
+
 api = Api(app)
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
@@ -262,6 +313,7 @@ api.add_resource(ProblemAPI, '/problem')
 api.add_resource(EdgeAPI, '/edge')
 api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
 api.add_resource(TestQuestionsAPI, '/testquestions/<test_id>')
+api.add_resource(FormatTestsAPI, '/format-tests')
 
 
 @app.route('/')

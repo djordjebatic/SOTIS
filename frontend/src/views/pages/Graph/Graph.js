@@ -276,7 +276,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
 
 handleDropDown(e){
   console.log("OPCIJA" + e.target.value)
-    this.setState({question_id: e.target.value})
+  this.setState({question_id: e.target.value})
 }
 
 saveGraph(graph){
@@ -367,18 +367,18 @@ createGraph(knowledgeSpace){
       "knowledge_space_id": id,
       "x": 20.0,
       "y": 20.0
-  }
-  axios({
-      method: 'post',
-      url: url + 'problem',
-      //headers: { "Authorization": AuthStr } ,   
-      data: data
-  }).then((response) => {
-      this.getKnowledgeSpace()
-      this.resetAll()
-  }, (error) => {
-      console.log(error);
-  });
+    }
+    axios({
+        method: 'post',
+        url: url + 'problem',
+        //headers: { "Authorization": AuthStr } ,   
+        data: data
+    }).then((response) => {
+        this.getKnowledgeSpace()
+        this.resetAll()
+    }, (error) => {
+        console.log(error);
+    });
   }
 
   saveEdge(edge){
@@ -690,7 +690,6 @@ createGraph(knowledgeSpace){
     const { nodes, edges } = this.state.graph;
     const selected = this.state.selected;
     const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
-    const testQuestions = this.state.testQuestions;
     const question_id = null; 
 
     return (
@@ -724,15 +723,16 @@ createGraph(knowledgeSpace){
                         value={this.state.question_id}
                         onChange={this.handleDropDown}
                       >
-                        <option disabled selected> -- select an option -- </option>
+                      <option selected> -- select an option -- </option>
                         {
-                            testQuestions.map(function (item) {
+                            this.state.testQuestions.map(function (item) {
                                 if (item.problem_id === '') {
                                   return <option value={item.id}>{item.title}</option>;
                                 }
                             })
                         }
-                    </select>
+                      </select>
+                      {this.state.question_id}
                     <CFormText className="help-block"><p style={{ color: "red" }}>{this.state.errorTitle}</p></CFormText>
               </CFormGroup>
               </CModalBody>
