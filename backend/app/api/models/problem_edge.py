@@ -5,11 +5,13 @@ class KnowledgeSpace(db.Model):
     __tablename__ = 'knowledge_space'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(200), nullable=False)
-    problems = db.relationship('Problem', backref='knowledge_space', lazy=True)
-    edges = db.relationship('Edge', backref='knowledge_space', lazy=True)
+    problems = db.relationship('Problem', backref='knowledge_space', lazy='subquery')
+    edges = db.relationship('Edge', backref='knowledge_space', lazy='subquery')
+    test_id = db.Column(db.Integer, db.ForeignKey('test.id'), nullable=False)
 
-    def __init__(self, title):
-        self.title = title
+    def __init__(self, title, test_id):
+        self.title = title,
+        self.test_id = test_id
 
     def insert(self):
         db.session.add(self)
@@ -24,11 +26,13 @@ class KnowledgeSpace(db.Model):
 
     def json_format(self):
         return {
-            'id': self.id,
-            'title': self.title,
-            'problems': [problem.json_format() for problem in self.problems],
-            'edges': [edge.json_format() for edge in self.edges]
+            "id": self.id,
+            "title": self.title,
+            "test_id": self.test_id,
+            "problems": [problem.json_format() for problem in self.problems],
+            "edges": [edge.json_format() for edge in self.edges]
         }
+
 
 class Problem(db.Model):
     __tablename__ = 'problem'
@@ -36,14 +40,17 @@ class Problem(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(200), nullable=False)
     x = db.Column(db.Float, nullable=False)
-    y = db.Column(db.Float, nullable = False)
+    y = db.Column(db.Float, nullable=False)
     knowledge_space_id = db.Column(db.Integer, db.ForeignKey('knowledge_space.id'), nullable=False)
+    #question = db.relationship('TestQuestion', backref='problem', lazy='subquery')
+    test_question_id = db.Column(db.Integer, db.ForeignKey('test_question.id'), nullable=False)
 
-    def __init__(self, title, knowledge_space_id, x, y):
+    def __init__(self, title, knowledge_space_id, x, y, test_question_id):
         self.title = title
         self.knowledge_space_id = knowledge_space_id
         self.x = x
         self.y = y
+        self.test_question_id = test_question_id
 
     def insert(self):
         db.session.add(self)
@@ -58,13 +65,14 @@ class Problem(db.Model):
 
     def json_format(self):
         return {
-            'id': self.id,
-            'title': self.title,
-            'upper_edge_ids': [x.higher_node.id for x in self.lower_edges],
-            'lower_edge_ids': [x.lower_node.id for x in self.upper_edges],
-            'x': self.x,
-            'y': self.y,
-            'knowledge_space_id': self.knowledge_space_id
+            "id": self.id,
+            "title": self.title,
+            "upper_edge_ids": [x.higher_node.id for x in self.lower_edges],
+            "lower_edge_ids": [x.lower_node.id for x in self.upper_edges],
+            "x": self.x,
+            "y": self.y,
+            "knowledge_space_id": self.knowledge_space_id,
+            "test_question_id": self.test_question_id
         }
 
 
@@ -105,10 +113,10 @@ class Edge(db.Model):
 
     def json_format(self):
         return {
-            'id': self.id,
-            'lower_id': self.lower_id,
-            'higher_id': self.higher_id,
-            'knowledge_space_id': self.knowledge_space_id
+            "id": self.id,
+            "lower_id": self.lower_id,
+            "higher_id": self.higher_id,
+            "knowledge_space_id": self.knowledge_space_id
         }
 
 

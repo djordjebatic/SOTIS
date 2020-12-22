@@ -64,7 +64,8 @@ class KnowledgeSpace extends RoleAwareComponent {
 
     addKnowledgeSpace() {
         let data = {
-            "title": this.state.title
+            "title": this.state.title,
+            "test_id": 1
         }
         axios({
             method: 'post',

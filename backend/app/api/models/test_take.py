@@ -8,7 +8,7 @@ class TestTake(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
-    test_take_answers = db.relationship('TestTakeAnswer', backref='test_take', lazy=True)
+    test_take_answers = db.relationship('TestTakeAnswer', backref='test_take', lazy='subquery')
 
     def __init__(self, student_id, test_id, score):
         self.student_id = student_id
@@ -28,9 +28,9 @@ class TestTake(db.Model):
 
     def json_format(self):
         return {
-            'id': self.id,
-            'student_id': self.student_id,
-            'test_id': self.test_id,
-            'score': self.score,
-            'test_take_answers': [test_take_answer.json_format() for test_take_answer in self.test_take_answers]
+            "id": self.id,
+            "student_id": self.student_id,
+            "test_id": self.test_id,
+            "score": self.score,
+            "test_take_answers": [test_take_answer.json_format() for test_take_answer in self.test_take_answers]
         }
