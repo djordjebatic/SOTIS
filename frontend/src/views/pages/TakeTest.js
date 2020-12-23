@@ -20,9 +20,12 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 
+import { RoleAwareComponent } from 'react-router-role-authorization'
+import {Redirect} from 'react-router-dom'
+
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
-class TakeTest extends Component {
+class TakeTest extends RoleAwareComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -35,6 +38,12 @@ class TakeTest extends Component {
         }]
       },
     };
+
+    let arr = [];
+    arr.push(localStorage.getItem('role'));
+    this.userRoles = arr;
+    this.allowedRoles = ['ROLE_STUDENT'];
+
 
     this.getTest = this.getTest.bind(this);
     this.toggleAccordion = this.toggleAccordion.bind(this)
@@ -83,15 +92,16 @@ class TakeTest extends Component {
   submitAnswers() {
     const { id } = this.props.match.params;
     let data = {
-      student_id: 1,
       test_id: id,
       score: 0,
       test: this.state.test
     }
+    let token = localStorage.getItem("loggedInUser")
+    let AuthStr = 'Bearer '.concat(token);       
     axios({
       method: 'post',
       url: url + 'test_take',
-      //headers: { "Authorization": AuthStr } ,   
+      headers: { "Authorization": AuthStr } ,   
       data: data
     }).then((response) => {
       this.props.history.push('/tests/test/' + response.data)
@@ -101,7 +111,7 @@ class TakeTest extends Component {
   }
 
   render() {
-    return (
+    let ret = (
       <div>
         <CCol xl="12" lg="12" md="12" sm="12">
           <CCard>
@@ -151,6 +161,7 @@ class TakeTest extends Component {
         </CCol>
       </div>
     );
+    return this.rolesMatched() ? ret : <Redirect to="/tests" />;
   }
 }
 

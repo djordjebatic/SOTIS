@@ -21,17 +21,27 @@ import CIcon from '@coreui/icons-react'
 import * as _ from 'lodash'
 
 
+import { RoleAwareComponent } from 'react-router-role-authorization';
+import {Redirect} from 'react-router-dom'
+
+
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
-class TestsPage extends Component {
+class TestsPage extends RoleAwareComponent {
   constructor(props) {
     super(props);
     this.state = {
       accordion: [],
       tests: [],
       collapsed: false,
-      showCard: true
+      showCard: true,
+      role: ''
     };
+
+    let arr = [];
+    arr.push(localStorage.getItem('role'));
+    this.userRoles = arr;
+    this.allowedRoles = ['ROLE_PROFESSOR', 'ROLE_STUDENT'];
 
     this.getTests = this.getTests.bind(this);
     this.toggleAccordion = this.toggleAccordion.bind(this)
@@ -55,6 +65,7 @@ class TestsPage extends Component {
 
   componentDidMount() {
     this.getTests()
+    this.setState({role:localStorage.getItem("role")})
   }
 
   getTests() {
@@ -85,9 +96,9 @@ class TestsPage extends Component {
   }
 
   render() {
-    return (
+    let ret = (
       <>
-        <CButton style={{ marginLeft: "10px", marginBottom: "20px" }} color="success" onClick={event => this.props.history.push('/tests/newTest')}>
+        <CButton hidden={this.state.role !== 'ROLE_PROFESSOR'} style={{ marginLeft: "10px", marginBottom: "20px" }} color="success" onClick={event => this.props.history.push('/tests/newTest')}>
           +
         </CButton>
         <CRow>
@@ -107,7 +118,7 @@ class TestsPage extends Component {
                     </div>
                   </CCardHeader>
                   <CCollapse show={this.state.accordion[index]}>
-                    <CCardBody>
+                    <CCardBody hidden={this.state.role !== 'ROLE_PROFESSOR'}>
                       <CRow>
                         {(_.sortBy(test.test_questions,"position")).map((question, indexQ) =>
                           <CCol xs="12" sm="6" md="4" lg="4">
@@ -128,7 +139,7 @@ class TestsPage extends Component {
                       </CRow>
                     </CCardBody>
                     <CCardFooter>
-                      <CButton color="primary" onClick={event => this.props.history.push('/tests/takeTest/' + test.id)} >Take test</CButton>
+                      <CButton hidden={this.state.role !== 'ROLE_STUDENT'} color="primary" onClick={event => this.props.history.push('/tests/takeTest/' + test.id)} >Take test</CButton>
                     </CCardFooter>
                   </CCollapse>
                 </CCard>
@@ -138,6 +149,7 @@ class TestsPage extends Component {
         </CRow>
       </>
     );
+    return this.rolesMatched() ? ret : <Redirect to="/tests" />;
   }
 }
 
