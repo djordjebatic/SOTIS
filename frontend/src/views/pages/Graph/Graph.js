@@ -13,6 +13,15 @@ import {
   CInput,
   CFormText,
   CRow,
+  CCard,
+  CCardHeader,
+  CCardBody,
+  CTabs,
+  CNav,
+  CNavItem,
+  CNavLink,
+  CTabContent,
+  CTabPane
 } from '@coreui/react'
 
 import {
@@ -255,7 +264,12 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
         "test_id": null,
         "problems": [],
         "edges": []
-      }
+      },
+      realKnowledgeSpace: {
+        "test_id": null,
+        "problems": [],
+        "edges": []
+      },
     };
 
     let arr = [];
@@ -274,8 +288,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
     this.saveEdge = this.saveEdge.bind(this)
     this.testQuestions = this.getTestQuestions.bind(this)
     this.handleDropDown = this.handleDropDown.bind(this);
-
-
+    this.handleTabChange = this.handleTabChange.bind(this);
   }
 
   componentDidMount(){
@@ -313,10 +326,10 @@ getKnowledgeSpace(){
     method: 'get',
     url: url + 'knowledge_space/' + id,
   }).then((response) => {
-    this.setState({knowledgeSpaceTitle: response.data.title}, () => console.log(this.state.knowledgeSpaceTitle))
-    this.createGraph(response.data)
-
-    axios.get(url + 'testquestions/' + response.data.test_id)
+    this.setState({knowledgeSpaceTitle: response.data.expected.title}, () => console.log(this.state.knowledgeSpaceTitle))
+    this.setState({knowledgeSpace: response.data.expected, realKnowledgeSpace:response.data.real})
+    this.createGraph(response.data.expected)
+    axios.get(url + 'testquestions/' + response.data.expected.test_id)
         .then((resp) => {
           this.setState({testQuestions: resp.data}, () => console.log(this.state.testQuestions))
         })
@@ -694,6 +707,15 @@ createGraph(knowledgeSpace){
    * Render
    */
 
+  handleTabChange(tab){
+    if (tab == 'expected'){
+      this.createGraph(this.state.knowledgeSpace)
+    }
+    else if (tab == 'real'){
+      this.createGraph(this.state.realKnowledgeSpace)
+    }
+  }
+
   render() {
     const { nodes, edges } = this.state.graph;
     const selected = this.state.selected;
@@ -779,7 +801,39 @@ createGraph(knowledgeSpace){
             </select>
           </div> */}
         </div>
-        <div id="graph" style={{ height:"700px" }}>
+        <CCard>
+          <CCardBody>
+            <CTabs activeTab="expected">
+              <CNav variant="tabs">
+                <CNavItem onClick={() => this.handleTabChange('expected')}>
+                  <CNavLink data-tab="expected">
+                    Expected
+                  </CNavLink>
+                </CNavItem>
+                <CNavItem onClick={() => this.handleTabChange('real')}>
+                  <CNavLink data-tab="real">
+                    Real
+                  </CNavLink>
+                </CNavItem>
+                <CNavItem>
+                  <CNavLink data-tab="compare">
+                    Compare
+                  </CNavLink>
+                </CNavItem>
+              </CNav>
+              <CTabContent>
+                <CTabPane data-tab="expected">
+                  Expected
+                </CTabPane>
+                <CTabPane data-tab="real">
+                  Real
+                </CTabPane>
+                <CTabPane data-tab="compare">
+                  Compare
+                </CTabPane>
+              </CTabContent>
+            </CTabs>
+                              <div id="graph" style={{ height:"700px" }}>
           <GraphView
             ref={el => (this.GraphView = el)}
             nodeKey={NODE_KEY}
@@ -803,7 +857,9 @@ createGraph(knowledgeSpace){
             layoutEngineType={this.state.layoutEngineType}
           />
         </div>
-        </CCol>
+          </CCardBody>
+        </CCard>
+      </CCol>
       </>
     );
     return ret;
