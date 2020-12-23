@@ -17,17 +17,12 @@ from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity, get_jwt_claims
 )
-from flask_security import login_required, roles_accepted
 from flask_principal import Identity, AnonymousIdentity, identity_changed, identity_loaded, RoleNeed, UserNeed
 from flask_login import login_user, logout_user, current_user
-
-from app.api.routes import knowledge_space
 
 import datetime
 
 from flask import request
-
-import json
 
 # if not current_user.is_authenticated:
 #     return current_app.login_manager.unauthorized()
@@ -512,10 +507,10 @@ def getTestTake(id):
 def getKnowledgeSpace(id):
     knowledge_space = KnowledgeSpace.query.get(int(id))
     real = KnowledgeSpace.query.filter_by(test_id=knowledge_space.test_id, isReal=True).first()
-    ret = {
+    '''ret = {
         'expected': knowledge_space.json_format(),
         'real': real.json_format()
-    }
+    }'''
     return knowledge_space.json_format(), 200
 
 @jwt.user_claims_loader

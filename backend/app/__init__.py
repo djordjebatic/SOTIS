@@ -13,7 +13,6 @@ from flask_security import Security, SQLAlchemyUserDatastore
 from flask_principal import Principal, Permission, RoleNeed
 
 
-
 app = flask.Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
@@ -46,27 +45,27 @@ security = Security(app, user_datastore)
 principals = Principal(app)
 
 
-# db.drop_all()
-# db.create_all()
+db.drop_all()
+db.create_all()
 
-# role1 = Role('ROLE_ADMIN', 'Administrator role')
-# role2 = Role('ROLE_STUDENT', 'Student role')
-# role3 = Role('ROLE_PROFESSOR', 'Professor role')
-# role1.insert()
-# role2.insert()
-# role3.insert()
+role1 = Role('ROLE_ADMIN', 'Administrator role')
+role2 = Role('ROLE_STUDENT', 'Student role')
+role3 = Role('ROLE_PROFESSOR', 'Professor role')
+role1.insert()
+role2.insert()
+role3.insert()
 
-# u1 = User('Marko', 'Markovic', 'profesor', 'profesor123', 'profesor@email.com')
-# u1.add_role(role3)
-# u1.insert()
-# prof = Professor(u1.id)
-# prof.insert()
+u1 = User('Marko', 'Markovic', 'profesor', 'profesor123', 'profesor@email.com')
+u1.add_role(role3)
+u1.insert()
+prof = Professor(u1.id)
+prof.insert()
 
-# u2 = User('Nikola', 'Nikolic', 'student', 'student123', 'student@email.com')
-# u2.add_role(role2)
-# u2.insert()
-# stud = Student(u2.id)
-# stud.insert()
+u2 = User('Nikola', 'Nikolic', 'student', 'student123', 'student@email.com')
+u2.add_role(role2)
+u2.insert()
+stud = Student(u2.id)
+stud.insert()
 
 '''ks = KnowledgeSpace('Algebra', 1)
 ks.insert()
