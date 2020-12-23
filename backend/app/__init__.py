@@ -67,6 +67,7 @@ u2.insert()
 stud = Student(u2.id)
 stud.insert()
 
+
 '''ks = KnowledgeSpace('Algebra', 1)
 ks.insert()
 
