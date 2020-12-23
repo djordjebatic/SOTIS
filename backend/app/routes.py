@@ -509,11 +509,12 @@ def getTestTake(id):
 def getKnowledgeSpace(id):
     knowledge_space = KnowledgeSpace.query.get(int(id))
     real = KnowledgeSpace.query.filter_by(test_id=knowledge_space.test_id, isReal=True).first()
-    '''ret = {
+    ret = {
         'expected': knowledge_space.json_format(),
         'real': real.json_format()
-    }'''
-    return knowledge_space.json_format(), 200
+    }
+    return ret, 200
+
 
 @jwt.user_claims_loader
 def add_claims_to_access_token(identity):
