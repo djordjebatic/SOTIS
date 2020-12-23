@@ -42,6 +42,8 @@ import GraphConfig, {
   SPECIAL_EDGE_TYPE,
   SPECIAL_TYPE,
   SKINNY_TYPE,
+  RED_EDGE_TYPE,
+  GREEN_EDGE_TYPE
 } from './graph-config'; // Configures node/edge types
 
 import axios from 'axios'
@@ -270,6 +272,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
         "problems": [],
         "edges": []
       },
+      currentTab: 'expected'
     };
 
     let arr = [];
@@ -289,6 +292,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
     this.testQuestions = this.getTestQuestions.bind(this)
     this.handleDropDown = this.handleDropDown.bind(this);
     this.handleTabChange = this.handleTabChange.bind(this);
+    this.compareGraphs = this.compareGraphs.bind(this)
   }
 
   componentDidMount(){
@@ -403,24 +407,26 @@ createGraph(knowledgeSpace){
   }
 
   saveEdge(edge){
-    const { id } = this.props.match.params;
-    let data = {
-      "knowledge_space_id": id,
-      "lower_id" : edge.source,
-      "upper_id": edge.target  
+    if (this.state.currentTab === 'expected'){
+      const { id } = this.props.match.params;
+      let data = {
+        "knowledge_space_id": id,
+        "lower_id" : edge.source,
+        "upper_id": edge.target  
+      }
+      axios({
+        method: 'post',
+        url: url + 'edge',
+        //headers: { "Authorization": AuthStr } ,   
+        data: data
+    }).then((response) => {
+        this.getKnowledgeSpace()
+        return true
+    }, (error) => {
+        console.log(error);
+        return false
+    });
     }
-    axios({
-      method: 'post',
-      url: url + 'edge',
-      //headers: { "Authorization": AuthStr } ,   
-      data: data
-  }).then((response) => {
-      this.getKnowledgeSpace()
-      return true
-  }, (error) => {
-      console.log(error);
-      return false
-  });
   }
 
 
@@ -481,26 +487,28 @@ createGraph(knowledgeSpace){
   };
 
   addStartNode = () => {
-    const graph = this.state.graph;
-
-    // using a new array like this creates a new memory reference
-    // this will force a re-render
-    graph.nodes = [
-      {
-        id: Date.now(),
-        title: 'Node A',
-        type: SPECIAL_TYPE,
-        x: 0,
-        y: 0,
-      },
-      ...this.state.graph.nodes,
-    ];
-    this.setState({
-      graph,
-    });
-    this.saveGraph(graph)
+      if (this.state.currentTab === 'expected' ){
+        const graph = this.state.graph;
+      // using a new array like this creates a new memory reference
+      // this will force a re-render
+      graph.nodes = [
+        {
+          id: Date.now(),
+          title: 'Node A',
+          type: SPECIAL_TYPE,
+          x: 0,
+          y: 0,
+        },
+        ...this.state.graph.nodes,
+      ];
+      this.setState({
+        graph,
+      });
+      this.saveGraph(graph)
+    }
   };
   deleteStartNode = () => {
+    if (this.state.currentTab === 'expected' ){
     const graph = this.state.graph;
 
     graph.nodes.splice(0, 1);
@@ -511,6 +519,7 @@ createGraph(knowledgeSpace){
       graph,
     });
     this.saveGraph(graph)
+    }
   };
 
   handleChange = (event: any) => {
@@ -529,12 +538,16 @@ createGraph(knowledgeSpace){
   // Called by 'drag' handler, etc..
   // to sync updates from D3 with the graph
   onUpdateNode = (viewNode: INode) => {
+    if (this.state.currentTab === 'expected' ){
+
+
     const graph = this.state.graph;
     const i = this.getNodeIndex(viewNode);
 
     graph.nodes[i] = viewNode;
     this.setState({ graph });
     this.saveGraph(graph)
+    }
   };
 
   // Node 'mouseUp' handler
@@ -550,6 +563,8 @@ createGraph(knowledgeSpace){
 
   // Updates the graph with a new node
   onCreateNode = (x: number, y: number) => {
+          if (this.state.currentTab === 'expected' ){
+
     const graph = this.state.graph;
 
     // This is just an example - any sort of logic
@@ -569,10 +584,13 @@ createGraph(knowledgeSpace){
     graph.nodes = [...graph.nodes, viewNode];
     this.setState({ graph });
     this.saveGraph(graph)
+          }
   };
 
   // Deletes a node from the graph
   onDeleteNode = (viewNode: INode, nodeId: string, nodeArr: INode[]) => {
+          if (this.state.currentTab === 'expected' ){
+
     const graph = this.state.graph;
     // Delete any connected edges
     const newEdges = graph.edges.filter((edge, i) => {
@@ -586,10 +604,13 @@ createGraph(knowledgeSpace){
 
     this.setState({ graph, selected: null });
     this.saveGraph(graph)
+          }
   };
 
   // Creates a new node between two edges
   onCreateEdge = (sourceViewNode: INode, targetViewNode: INode) => {
+          if (this.state.currentTab === 'expected' ){
+
     const graph = this.state.graph;
     // This is just an example - any sort of logic
     // could be used here to determine edge type
@@ -614,6 +635,7 @@ createGraph(knowledgeSpace){
         });
       }
     }
+          }
   };
 
   // Called when an edge is reattached to a different target.
@@ -622,6 +644,8 @@ createGraph(knowledgeSpace){
     targetViewNode: INode,
     viewEdge: IEdge
   ) => {
+          if (this.state.currentTab === 'expected' ){
+
     const graph = this.state.graph;
     const i = this.getEdgeIndex(viewEdge);
     const edge = JSON.parse(JSON.stringify(graph.edges[i]));
@@ -637,10 +661,13 @@ createGraph(knowledgeSpace){
       selected: edge,
     });
     this.saveGraph(graph)
+          }
   };
 
   // Called when an edge is deleted
   onDeleteEdge = (viewEdge: IEdge, edges: IEdge[]) => {
+          if (this.state.currentTab === 'expected' ){
+
     const graph = this.state.graph;
 
     graph.edges = edges;
@@ -649,6 +676,7 @@ createGraph(knowledgeSpace){
       selected: null,
     });
     this.saveGraph(graph)
+          }
   };
 
   onUndo = () => {
@@ -677,6 +705,8 @@ createGraph(knowledgeSpace){
 
   // Pastes the selected node to mouse position
   onPasteSelected = (node: INode, mousePosition?: [number, number]) => {
+              if (this.state.currentTab === 'expected' ){
+
     const graph = this.state.graph;
 
     const newNode = {
@@ -689,6 +719,7 @@ createGraph(knowledgeSpace){
     graph.nodes = [...graph.nodes, newNode];
     this.forceUpdate();
     this.saveGraph(graph)
+              }
   };
 
   handleChangeLayoutEngineType = (event: any) => {
@@ -708,12 +739,67 @@ createGraph(knowledgeSpace){
    */
 
   handleTabChange(tab){
+    this.setState({currentTab: tab})
     if (tab == 'expected'){
       this.createGraph(this.state.knowledgeSpace)
     }
     else if (tab == 'real'){
       this.createGraph(this.state.realKnowledgeSpace)
     }
+    else{
+      this.compareGraphs()
+    }
+  }
+
+  compareGraphs(){
+    const { id } = this.props.match.params;
+    let knowledgeSpace = {}
+    axios({
+      method: 'get',
+      url: url + 'compare/' + id,
+    }).then((response) => {
+      knowledgeSpace = response.data
+       let edges = []
+    let nodes = []
+    let edge = {}
+    let node = {}
+    var i
+    for (i in knowledgeSpace.edges) {
+      let t = EMPTY_EDGE_TYPE
+      if (knowledgeSpace.edges[i].color === 'red'){
+        t = RED_EDGE_TYPE
+      }
+      else if(knowledgeSpace.edges[i].color === 'green'){
+        t = GREEN_EDGE_TYPE
+      }
+      edge = {
+        id: knowledgeSpace.edges[i].id,
+        source: knowledgeSpace.edges[i].lower_id,
+        target: knowledgeSpace.edges[i].higher_id,
+        type: t
+      }
+      edges.push(edge)
+    } 
+    for (i in knowledgeSpace.problems){
+      node = {
+        id: knowledgeSpace.problems[i].id,
+        title: knowledgeSpace.problems[i].title,
+        type: EMPTY_TYPE,
+        x: knowledgeSpace.problems[i].x,
+        y: knowledgeSpace.problems[i].y,
+      }
+      nodes.push(node)
+    }
+
+    const temp: IGraph = {
+      edges: edges,
+      nodes: nodes
+    };
+    this.setState({graph:temp})
+    }, (error) => {
+      console.log(error);
+    }); 
+
   }
 
   render() {
@@ -815,7 +901,7 @@ createGraph(knowledgeSpace){
                     Real
                   </CNavLink>
                 </CNavItem>
-                <CNavItem>
+                <CNavItem onClick={() => this.handleTabChange('compare')}>
                   <CNavLink data-tab="compare">
                     Compare
                   </CNavLink>
