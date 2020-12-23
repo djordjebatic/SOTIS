@@ -17,17 +17,14 @@ from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity, get_jwt_claims
 )
-from flask_security import login_required, roles_accepted
+
 from flask_principal import Identity, AnonymousIdentity, identity_changed, identity_loaded, RoleNeed, UserNeed
 from flask_login import login_user, logout_user, current_user
-
-from app.api.routes import knowledge_space
 
 import datetime
 
 from flask import request
 
-import json
 
 # if not current_user.is_authenticated:
 #     return current_app.login_manager.unauthorized()
@@ -171,6 +168,8 @@ class CreateTest(Resource):
         for question in questions:
             new_question = TestQuestion(title=question['title'], points=question['points'], test_id=test.id)
             new_question.insert()
+            new_question.position = new_question.id
+            new_question.update()
 
             question_answers = question['answers']
             for answer in question_answers:
@@ -370,6 +369,55 @@ class UserAPI(Resource):
             }
             return responseObject, 401
 
+class FormatTestsAPI(Resource):
+    def post(self):
+        data = request.get_json()
+
+        # TODO check
+        ks_id = data['knowledge_space_id']
+
+        edges = Edge.query.filter(Edge.knowledge_space_id == ks_id).all()
+        nodes = Problem.query.filter(Problem.knowledge_space_id == ks_id).all()
+        print(len(nodes), len(edges))
+        if len(nodes) - len(edges) != 1:
+            return {'error': 'All nodes must be connected'}, 409
+
+        for edge in edges:
+            lower_node_id = edge.lower_id
+            root_node = Problem.query.filter(Problem.id == lower_node_id).first()
+            if not root_node.json_format()['lower_edge_ids'] and root_node.json_format()['upper_edge_ids']:
+                root_node.root = True
+                root_node.update()
+            else:
+                root_node.root = False
+                root_node.update()
+
+        visited = []
+        queue = []
+        i = 1
+        root_node = Problem.query.filter(Problem.root == True).first()
+        print(root_node.title)
+
+        visited.append(root_node.id)
+        queue.append(root_node)
+
+        while queue:
+            s = queue.pop(0)
+            node_question_id = s.test_question_id
+            question = TestQuestion.query.filter(TestQuestion.id == node_question_id).first()
+            question.position = i
+            question.update()
+            i += 1
+            print(question.title)
+
+            for neighbour_id in s.json_format()['upper_edge_ids']:
+                if neighbour_id not in visited:
+                    visited.append(neighbour_id)
+                    queue.append(Problem.query.filter(Problem.id == neighbour_id).first())
+
+        return [test.json_format() for test in TestModel.query.all()], 200
+
+
 api = Api(app)
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
@@ -380,6 +428,7 @@ api.add_resource(EdgeAPI, '/edge')
 api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
 api.add_resource(UserAPI, '/user')
 api.add_resource(TestQuestionsAPI, '/testquestions/<test_id>')
+api.add_resource(FormatTestsAPI, '/format-tests')
 
 
 
@@ -465,6 +514,7 @@ def getKnowledgeSpace(id):
         'real': real.json_format()
     }
     return ret, 200
+
 
 @jwt.user_claims_loader
 def add_claims_to_access_token(identity):
