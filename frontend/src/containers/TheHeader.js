@@ -76,7 +76,7 @@ const logOut = () => {
 
       <CHeaderNav className="d-md-down-none mr-auto">
         <CHeaderNavItem className="px-3" >
-          <CHeaderNavLink to="/students">Students</CHeaderNavLink>
+          <CHeaderNavLink to="/tests">Tests</CHeaderNavLink>
         </CHeaderNavItem>
         </CHeaderNav>
           <div className="d-md-down-none mfe-2 c-subheader-nav">

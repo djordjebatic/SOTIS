@@ -21,9 +21,12 @@ from flask_security import login_required, roles_accepted
 from flask_principal import Identity, AnonymousIdentity, identity_changed, identity_loaded, RoleNeed, UserNeed
 from flask_login import login_user, logout_user, current_user
 
+from app.api.routes import knowledge_space
+
 import datetime
 
 from flask import request
+
 import json
 
 # if not current_user.is_authenticated:
@@ -39,7 +42,7 @@ class UserRegistration(Resource):
         # TODO hash pasword (flask_jwt)
         user = User(name=data['name'], last_name=data['last_name'], username=data['username'],
                           password=data['password'], email=data['email'])
-        role = Role.query.filter(Role.name=='ROLE_STUDENT')
+        role = Role.query.filter(Role.name=='ROLE_STUDENT').first()
         user.add_role(role)
         user.insert()
         student = Student(user_id=user.id)
@@ -299,9 +302,11 @@ class KnowledgeSpaceAPI(Resource):
         data = request.get_json()
         title = data['title']
         test_id = data['test_id']
-        new_knowledge_space = KnowledgeSpace(title, test_id)
+        new_knowledge_space = KnowledgeSpace(title, test_id, False)
         new_knowledge_space.insert()
-
+        # TODO add test_id on front
+        new_knowledge_space.test_id = new_knowledge_space.id
+        new_knowledge_space.insert()
         return new_knowledge_space.json_format(), 200
 
     def get(self):
@@ -454,7 +459,11 @@ def getTestTake(id):
 @app.route("/knowledge_space/<int:id>")
 def getKnowledgeSpace(id):
     knowledge_space = KnowledgeSpace.query.get(int(id))
-
+    real = KnowledgeSpace.query.filter_by(test_id=knowledge_space.test_id, isReal=True).first()
+    ret = {
+        'expected': knowledge_space.json_format(),
+        'real': real.json_format()
+    }
     return knowledge_space.json_format(), 200
 
 @jwt.user_claims_loader
