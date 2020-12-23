@@ -5,13 +5,15 @@ class KnowledgeSpace(db.Model):
     __tablename__ = 'knowledge_space'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(200), nullable=False)
+    isReal = db.Column(db.Boolean, nullable=False)
     problems = db.relationship('Problem', backref='knowledge_space', lazy='subquery')
     edges = db.relationship('Edge', backref='knowledge_space', lazy='subquery')
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'), nullable=False)
 
-    def __init__(self, title, test_id):
+    def __init__(self, title, test_id, isReal):
         self.title = title,
         self.test_id = test_id
+        self.isReal = isReal
 
     def insert(self):
         db.session.add(self)
@@ -30,7 +32,8 @@ class KnowledgeSpace(db.Model):
             "title": self.title,
             "test_id": self.test_id,
             "problems": [problem.json_format() for problem in self.problems],
-            "edges": [edge.json_format() for edge in self.edges]
+            "edges": [edge.json_format() for edge in self.edges],
+            "isReal": self.isReal
         }
 
 
