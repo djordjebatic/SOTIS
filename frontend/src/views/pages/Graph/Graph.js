@@ -36,6 +36,7 @@ import GraphConfig, {
 } from './graph-config'; // Configures node/edge types
 
 import axios from 'axios'
+import {NotificationManager, NotificationContainer} from 'react-notifications';
 
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
@@ -266,6 +267,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
     this.saveEdge = this.saveEdge.bind(this)
     this.testQuestions = this.getTestQuestions.bind(this)
     this.handleDropDown = this.handleDropDown.bind(this);
+    this.sortQuestions = this.sortQuestions.bind(this);
 
 
   }
@@ -278,6 +280,13 @@ handleDropDown(e){
   console.log("OPCIJA" + e.target.value)
   this.setState({question_id: e.target.value})
 }
+
+sortQuestions = () => {
+      const { id } = this.props.match.params;
+        axios.post(url + 'format-tests', {"knowledge_space_id": id})
+        .then((resp) => NotificationManager.success('Questions sorted', 'Success', 4000))
+        .catch((error) => NotificationManager.error('All nodes must be connected!', 'Error!', 4000))
+    }
 
 saveGraph(graph){
   const { id } = this.props.match.params;
@@ -697,6 +706,7 @@ createGraph(knowledgeSpace){
             <CCol xs="12" lg="12">
         <div className="graph-header">
             <h2>{this.state.knowledgeSpaceTitle}<CButton style={{marginBottom:"20px", float:"right"}} id="confirmButton" onClick={() => this.setState({showModal:true})} color="success" className="px-4">New problem</CButton>
+            <CButton style={{marginTop:"60px", float:"right"}} id="confirmButton" onClick={() => this.sortQuestions()} color="success" className="px-4">Sort test questions</CButton>
             </h2>
             <CModal 
               show={this.state.showModal} 
