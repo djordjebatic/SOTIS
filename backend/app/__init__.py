@@ -13,7 +13,6 @@ from flask_security import Security, SQLAlchemyUserDatastore
 from flask_principal import Principal, Permission, RoleNeed
 
 
-
 app = flask.Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
@@ -68,7 +67,8 @@ u2.insert()
 stud = Student(u2.id)
 stud.insert()
 
-''''ks = KnowledgeSpace('Algebra', 1)
+
+'''ks = KnowledgeSpace('Algebra', 1)
 ks.insert()
 
 p1 = Problem('Proba 1', ks.id, 100, 100)
@@ -83,4 +83,4 @@ p4.insert()
 e1 = Edge(p1, p2, ks.id)
 e2 = Edge(p2, p3, ks.id)
 e1.insert()
-e2.insert()''''
+e2.insert()'''

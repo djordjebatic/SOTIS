@@ -295,6 +295,8 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
     this.handleTabChange = this.handleTabChange.bind(this);
     this.compareGraphs = this.compareGraphs.bind(this)
     this.generateReal = this.generateReal.bind(this)
+    this.sortQuestions = this.sortQuestions.bind(this);
+
   }
 
   componentDidMount(){
@@ -303,8 +305,15 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
 
 handleDropDown(e){
   console.log("OPCIJA" + e.target.value)
-    this.setState({question_id: e.target.value})
+  this.setState({question_id: e.target.value})
 }
+
+sortQuestions = () => {
+      const { id } = this.props.match.params;
+        axios.post(url + 'format-tests', {"knowledge_space_id": id})
+        .then((resp) => NotificationManager.success('Questions sorted', 'Success', 4000))
+        .catch((error) => NotificationManager.error('All nodes must be connected!', 'Error!', 4000))
+    }
 
 saveGraph(graph){
   const { id } = this.props.match.params;
@@ -394,18 +403,18 @@ createGraph(knowledgeSpace){
       "knowledge_space_id": id,
       "x": 20.0,
       "y": 20.0
-  }
-  axios({
-      method: 'post',
-      url: url + 'problem',
-      //headers: { "Authorization": AuthStr } ,   
-      data: data
-  }).then((response) => {
-      this.getKnowledgeSpace()
-      this.resetAll()
-  }, (error) => {
-      console.log(error);
-  });
+    }
+    axios({
+        method: 'post',
+        url: url + 'problem',
+        //headers: { "Authorization": AuthStr } ,   
+        data: data
+    }).then((response) => {
+        this.getKnowledgeSpace()
+        this.resetAll()
+    }, (error) => {
+        console.log(error);
+    });
   }
 
   saveEdge(edge){
@@ -823,7 +832,6 @@ createGraph(knowledgeSpace){
     const { nodes, edges } = this.state.graph;
     const selected = this.state.selected;
     const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
-    const testQuestions = this.state.testQuestions;
     const question_id = null; 
 
     let ret = (
@@ -833,6 +841,7 @@ createGraph(knowledgeSpace){
             <h2>{this.state.knowledgeSpaceTitle}
             <CButton hidden={this.state.currentTab !== 'expected'} style={{float:"right"}} id="confirmButton" onClick={() => this.setState({showModal:true})} color="success" className="px-4">New problem</CButton>
             <CButton hidden={this.state.currentTab !== 'real'} style={{float:"right"}} id="confirmButton" onClick={() => this.generateReal()} color="success" className="px-4">Generate</CButton>
+            <CButton hidden={this.state.currentTab !== 'expected'} style={{marginRight:"20px", float:"right"}} id="confirmButton" onClick={() => this.sortQuestions()} color="success" className="px-4">Sort test questions</CButton>
             </h2>
             <CModal 
               show={this.state.showModal} 
@@ -859,15 +868,16 @@ createGraph(knowledgeSpace){
                         value={this.state.question_id}
                         onChange={this.handleDropDown}
                       >
-                        <option disabled selected> -- select an option -- </option>
+                      <option selected> -- select an option -- </option>
                         {
-                            testQuestions.map(function (item) {
+                            this.state.testQuestions.map(function (item) {
                                 if (item.problem_id === '') {
                                   return <option value={item.id}>{item.title}</option>;
                                 }
                             })
                         }
-                    </select>
+                      </select>
+                      {this.state.question_id}
                     <CFormText className="help-block"><p style={{ color: "red" }}>{this.state.errorTitle}</p></CFormText>
               </CFormGroup>
               </CModalBody>

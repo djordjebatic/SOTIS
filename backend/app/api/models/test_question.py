@@ -7,6 +7,7 @@ class TestQuestion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(500), nullable=False)
     points = db.Column(db.Integer, nullable=False)
+    position = db.Column(db.Integer)
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'), nullable=False)
     test_question_answers = db.relationship('TestQuestionAnswer', backref='test_question', lazy='subquery')
     test_take_answers = db.relationship('TestTakeAnswer', backref='test_question', lazy='subquery')
@@ -39,6 +40,7 @@ class TestQuestion(db.Model):
             "points": self.points,
             "test_id": self.test_id,
             "problem_id": problem_id,
+            "position": self.position,
             "test_question_answers": [test_question_answer.json_format() for test_question_answer in self.test_question_answers],
             "test_take_answers": [test_take_answer.json_format() for test_take_answer in self.test_take_answers]
         }
