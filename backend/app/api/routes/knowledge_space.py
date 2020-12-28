@@ -62,6 +62,7 @@ def create_graph(test, implications):
     ks.insert()
 
     questions = test.test_questions
+    questions = sorted(questions, key=lambda question: question.id)
     n = len(questions)
     mat = np.full((n, n), 0, dtype=int)
     arr = np.full((n, 2), 0, dtype=int)
@@ -70,32 +71,31 @@ def create_graph(test, implications):
     for implication in implications:
         if mat[implication[1]][implication[0]]:
             mat[implication[1]][implication[0]] = 0
-            arr[implication[0], 1] = arr[implication[0], 1] - 1
+            arr[implication[1], 1] = arr[implication[1], 1] - 1
         else:
             mat[implication[0]][implication[1]] = 1
-            arr[implication[0], 1] = arr[implication[0], 1] + 1
+            arr[implication[1], 1] = arr[implication[1], 1] + 1
     
-    arr = sorted(arr, key = lambda a: a[1], reverse=True) 
+    arr = sorted(arr, key = lambda a: a[1]) 
     prev = -1
     x = 0
     y = 0
     for i in range(n):
         if arr[i][1] == prev:
+            x = x + 300
+        else:
             x = 0
             y = y - 300
-        else:
-            x = x + 200
         prev = arr[i][1]
         question = questions[arr[i][0]]
         p = Problem(question.title, ks.id, x, y, question.id)
         p.insert()
         upper_node = p
         for j in range(n-1, -1, -1):
-            if mat[j, arr[i][0]] == 1:
+            if mat[arr[j][0], arr[i][0]] == 1:
                 lower_node = Problem.query.filter_by(knowledge_space_id = ks.id, test_question_id = questions[j].id).first()
                 
-                #ok = not BFS(p, lower_node, n)
-                ok = True
+                ok = not BFS(p, lower_node, n)
                 if ok:
                     new_edge = Edge(lower_node, upper_node, ks.id)
                     new_edge.insert()
@@ -120,9 +120,9 @@ def BFS(curr, lower_node, n):
     while queue:
 
         s = queue.pop(0)
-        lower_node = Problem.query.filter_by(id=s.id).first()
+        node = Problem.query.filter_by(id=s.id).first()
    
-        for edge_id in lower_node.json_format()['lower_edge_ids']:
+        for edge_id in node.json_format()['lower_edge_ids']:
             if edge_id not in visited:
                 if edge_id == lower_node.id:
                     return True
