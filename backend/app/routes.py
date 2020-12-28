@@ -24,6 +24,7 @@ from flask_login import login_user, logout_user, current_user
 import datetime
 
 from flask import request
+from app.api.routes import knowledge_space
 
 
 # if not current_user.is_authenticated:
@@ -509,10 +510,16 @@ def getTestTake(id):
 def getKnowledgeSpace(id):
     knowledge_space = KnowledgeSpace.query.get(int(id))
     real = KnowledgeSpace.query.filter_by(test_id=knowledge_space.test_id, isReal=True).first()
-    ret = {
+    if real is None:
+        ret = {
+            'expected': knowledge_space.json_format(),
+            'real': {}
+        }
+    else:
+        ret = {
         'expected': knowledge_space.json_format(),
         'real': real.json_format()
-    }
+        }
     return ret, 200
 
 

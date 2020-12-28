@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import sys
 
+from app import app
 from app.api.models.test_take_answer import TestTakeAnswer
 from app.api.models.test_question_answer import TestQuestionAnswer
 from app.api.models.test import TestModel
@@ -15,10 +16,15 @@ from learning_spaces.kst import iita
 # print(response)
 # {'diff': array([ 0.18518519,  0.16666667,  0.21296296]), 'implications': [(0, 1), (0, 2), (2, 0), (2, 1)], 'error.rate': 0.5, 'selection.set.index': 1, 'v': 1}
 
-def create_ks(test):
+
+@app.route("/knowledge_space/generateReal/<int:id>", methods=['PUT'])
+def create_ks(id):
+    knowledge_space = KnowledgeSpace.query.get(int(id))
+    test = TestModel.query.get(int(knowledge_space.test_id))
     if len(test.test_takes) > 1:
         m = generate_matrix(test)
         response = iita(m, v = 1)
+        print(response)
         return create_graph(test, response['implications'])
     return None
 
@@ -88,84 +94,97 @@ def create_graph(test, implications):
             if mat[j, arr[i][0]] == 1:
                 lower_node = Problem.query.filter_by(knowledge_space_id = ks.id, test_question_id = questions[j].id).first()
                 
-                ok = not BFS(lower_node, lower_node, n)
+                #ok = not BFS(p, lower_node, n)
+                ok = True
                 if ok:
                     new_edge = Edge(lower_node, upper_node, ks.id)
                     new_edge.insert()
 
-                # end = False
-                # u_n = upper_node
-                # while not end:
-                #     if not u_n.json_format()['lower_edge_ids']:
-                #         break
-                #     if lower_node.id in u_n.json_format()['lower_edge_ids']:
-                #         ok = False
-                #         break                    
-                #     else:
-                #         if u_n.json_format()['lower_edge_ids']:
-                #             u_n = Problem.query.filter(Problem.id == u_n.json_format()['lower_edge_ids'][0]).first()
-                #         else:
-                #             end = True
-
-                # end = False
-                # l_n = lower_node
-                # while not end:
-                #     if not l_n.json_format()['lower_edge_ids']:
-                #         break
-                #     if upper_node.id in l_n.json_format()['lower_edge_ids']:
-                #         ok = False
-                #         break
-                #     else:
-                #         if l_n.json_format()['lower_edge_ids']:
-                #             l_n = Problem.query.filter(Problem.id == l_n.json_format()['lower_edge_ids'][0]).first()
-                #         else:
-                #             end = True
-                # if ok:
-                #     new_edge = Edge(lower_node, upper_node, ks.id)
-                #     new_edge.insert()
-
-    # for i in range(n):
-
-    # for i in range(len(implications)):
-
-
-
-    # for question in questions:
-    #     p = Problem(question.title, ks.id, 0, 0)
-    #     p.insert()
-    return ks
+    return ks.json_format()
 
 def BFS(curr, lower_node, n):
     if lower_node is None:
         return True
+
     # Mark all the vertices as not visited
-    visited = []
+    visited = [curr.id]
 
     # Create a queue for BFS
     queue = []
 
     # Mark the source node as 
     # visited and enqueue it
-    queue.append(lower_node.id)
+    #visited.append(curr.id)
+    queue.append(curr)
     
     while queue:
-        # Dequeue a vertex from 
-        # queue and print it
+
         s = queue.pop(0)
-        lower_node = Problem.query.filter_by(id=s).first()
-        # Get all adjacent vertices of the
-        # dequeued vertex s. If a adjacent
-        # has not been visited, then mark it
-        # visited and enqueue it
-        for edge in lower_node.lower_edges:
-            if edge.lower_node.id not in visited:
-                if edge.lower_node.id == curr.id:
+        lower_node = Problem.query.filter_by(id=s.id).first()
+   
+        for edge_id in lower_node.json_format()['lower_edge_ids']:
+            if edge_id not in visited:
+                if edge_id == lower_node.id:
                     return True
-                queue.append(edge.lower_node.id)
-                visited.append(edge.lower_node.id)
+                problem = Problem.query.filter_by(id=edge_id).first()
+                queue.append(problem)
+                visited.append(edge_id)
     return False
 
-tests = TestModel.query.all()
-for test in tests:
-    create_ks(test)
+@app.route("/compare/<int:id>")
+def compareKnowledgeSpaces(id):
+    knowledge_space = KnowledgeSpace.query.get(int(id))
+    real = KnowledgeSpace.query.filter_by(test_id=knowledge_space.test_id, isReal=True).first()
+    real_edges = real.edges
+    expected_edges = (knowledge_space.edges).copy()
+    
+    edges = []
+    e = {}
+    for edge in real_edges:
+        index = containsEdge(edge, expected_edges)
+        if index != -1:
+            expected_edges.pop(index)
+            e = {
+                "id": edge.id,
+                "lower_id": edge.lower_id,
+                "higher_id": edge.higher_id,
+                "color": "blue"
+            }
+        else:
+            e = {
+                "id": edge.id,
+                "lower_id": edge.lower_id,
+                "higher_id": edge.higher_id,
+                "color": "green"
+            }
+        edges.append(e)
+    for edge in expected_edges:
+        h_n = Problem.query.filter_by(id = edge.higher_id).first()
+        l_n = Problem.query.filter_by(id = edge.lower_id).first()
+        higher_node = Problem.query.filter_by(knowledge_space_id=real.id, test_question_id=h_n.test_question_id).first()
+        lower_node = Problem.query.filter_by(knowledge_space_id=real.id, test_question_id=l_n.test_question_id).first()        
+        e = {
+                "id": edge.id,
+                "lower_id": lower_node.id,
+                "higher_id": higher_node.id,
+                "color": "red"
+            }
+        edges.append(e)
 
+    ret = {
+        "test_id": real.test_id,
+        "problems": [problem.json_format() for problem in real.problems],
+        "edges": edges
+    }
+    return ret, 200
+
+def containsEdge(edge, edges):
+    h_n = Problem.query.filter_by(id = edge.higher_id).first()
+    l_n = Problem.query.filter_by(id = edge.lower_id).first()
+    for i in range(len(edges)):
+        higher_node = Problem.query.filter_by(id = edges[i].higher_id).first()
+        lower_node = Problem.query.filter_by(id = edges[i].lower_id).first()
+        if(h_n.test_question_id == higher_node.test_question_id and l_n.test_question_id == lower_node.test_question_id):
+            return i
+        
+    return -1

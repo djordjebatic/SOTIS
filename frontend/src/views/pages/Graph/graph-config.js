@@ -12,10 +12,12 @@ export const SKINNY_TYPE = 'skinny';
 export const SPECIAL_CHILD_SUBTYPE = 'specialChild';
 export const EMPTY_EDGE_TYPE = 'emptyEdge';
 export const SPECIAL_EDGE_TYPE = 'specialEdge';
+export const RED_EDGE_TYPE = 'redEdge';
+export const GREEN_EDGE_TYPE = 'greenEdge';
 export const COMPLEX_CIRCLE_TYPE = 'complexCircle';
 
 export const nodeTypes = [EMPTY_TYPE, POLY_TYPE, SPECIAL_TYPE, SKINNY_TYPE];
-export const edgeTypes = [EMPTY_EDGE_TYPE, SPECIAL_EDGE_TYPE];
+export const edgeTypes = [EMPTY_EDGE_TYPE, SPECIAL_EDGE_TYPE, GREEN_EDGE_TYPE, RED_EDGE_TYPE];
 
 const EmptyNodeShape = (
   <symbol viewBox="0 0 154 154" width="154" height="154" id="emptyNode">
@@ -76,6 +78,18 @@ const EmptyEdgeShape = (
   </symbol>
 );
 
+const redEdgeShape = (
+  <symbol viewBox="0 0 50 50" id="redEdge">
+    <circle cx="25" cy="25" r="8" fill="red" />
+  </symbol>
+);
+
+const greenEdgeShape = (
+  <symbol viewBox="0 0 50 50" id="greenEdge">
+    <circle cx="25" cy="25" r="8" fill="green" />
+  </symbol>
+);
+
 const SpecialEdgeShape = (
   <symbol viewBox="0 0 50 50" id="specialEdge">
     <rect
@@ -99,6 +113,14 @@ export default {
       shape: SpecialEdgeShape,
       shapeId: '#specialEdge',
     },
+    redEdge:{
+      shape: redEdgeShape,
+      shapeId: "#redEdge"
+    },
+    greenEdge:{
+      shape: greenEdgeShape,
+      shapeId: "#greenEdge"
+    }
   },
   NodeSubtypes: {
     specialChild: {
