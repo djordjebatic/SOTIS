@@ -50,6 +50,7 @@ import axios from 'axios'
 
 import { RoleAwareComponent } from 'react-router-role-authorization'
 import {Redirect} from 'react-router-dom'
+import {NotificationManager} from 'react-notifications';
 
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
@@ -293,6 +294,7 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
     this.handleDropDown = this.handleDropDown.bind(this);
     this.handleTabChange = this.handleTabChange.bind(this);
     this.compareGraphs = this.compareGraphs.bind(this)
+    this.generateReal = this.generateReal.bind(this)
   }
 
   componentDidMount(){
@@ -802,6 +804,21 @@ createGraph(knowledgeSpace){
 
   }
 
+  generateReal(){
+  const { id } = this.props.match.params;
+    axios({
+      method: 'put',
+      url: url + 'knowledge_space/generateReal/' + id,
+      //headers: { "Authorization": AuthStr } ,   
+  }).then((response) => {
+      this.setState({ realKnowledgeSpace: response.data })
+      this.createGraph(response.data)
+      NotificationManager.success('Real knowledge space successfuly generated', 'Success!', 4000);
+  }, (error) => {
+      console.log(error);
+  });
+  }
+
   render() {
     const { nodes, edges } = this.state.graph;
     const selected = this.state.selected;
@@ -813,7 +830,9 @@ createGraph(knowledgeSpace){
       <>
             <CCol xs="12" lg="12">
         <div className="graph-header">
-            <h2>{this.state.knowledgeSpaceTitle}<CButton style={{marginBottom:"20px", float:"right"}} id="confirmButton" onClick={() => this.setState({showModal:true})} color="success" className="px-4">New problem</CButton>
+            <h2>{this.state.knowledgeSpaceTitle}
+            <CButton hidden={this.state.currentTab !== 'expected'} style={{float:"right"}} id="confirmButton" onClick={() => this.setState({showModal:true})} color="success" className="px-4">New problem</CButton>
+            <CButton hidden={this.state.currentTab !== 'real'} style={{float:"right"}} id="confirmButton" onClick={() => this.generateReal()} color="success" className="px-4">Generate</CButton>
             </h2>
             <CModal 
               show={this.state.showModal} 
@@ -909,13 +928,10 @@ createGraph(knowledgeSpace){
               </CNav>
               <CTabContent>
                 <CTabPane data-tab="expected">
-                  Expected
                 </CTabPane>
                 <CTabPane data-tab="real">
-                  Real
                 </CTabPane>
                 <CTabPane data-tab="compare">
-                  Compare
                 </CTabPane>
               </CTabContent>
             </CTabs>

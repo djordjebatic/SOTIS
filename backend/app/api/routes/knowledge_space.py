@@ -16,7 +16,11 @@ from learning_spaces.kst import iita
 # print(response)
 # {'diff': array([ 0.18518519,  0.16666667,  0.21296296]), 'implications': [(0, 1), (0, 2), (2, 0), (2, 1)], 'error.rate': 0.5, 'selection.set.index': 1, 'v': 1}
 
-def create_ks(test):
+
+@app.route("/knowledge_space/generateReal/<int:id>", methods=['PUT'])
+def create_ks(id):
+    knowledge_space = KnowledgeSpace.query.get(int(id))
+    test = TestModel.query.get(int(knowledge_space.test_id))
     if len(test.test_takes) > 1:
         m = generate_matrix(test)
         response = iita(m, v = 1)
@@ -134,7 +138,7 @@ def create_graph(test, implications):
     # for question in questions:
     #     p = Problem(question.title, ks.id, 0, 0)
     #     p.insert()
-    return ks
+    return ks.json_format()
 
 def BFS(curr, lower_node, n):
     if lower_node is None:
@@ -165,10 +169,6 @@ def BFS(curr, lower_node, n):
                 queue.append(edge.lower_node.id)
                 visited.append(edge.lower_node.id)
     return False
-
-# tests = TestModel.query.all()
-# for test in tests:
-#     create_ks(test)
 
 @app.route("/compare/<int:id>")
 def compareKnowledgeSpaces(id):
