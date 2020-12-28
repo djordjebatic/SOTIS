@@ -24,6 +24,7 @@ def create_ks(id):
     if len(test.test_takes) > 1:
         m = generate_matrix(test)
         response = iita(m, v = 1)
+        print(response)
         return create_graph(test, response['implications'])
     return None
 
@@ -93,81 +94,41 @@ def create_graph(test, implications):
             if mat[j, arr[i][0]] == 1:
                 lower_node = Problem.query.filter_by(knowledge_space_id = ks.id, test_question_id = questions[j].id).first()
                 
-                ok = not BFS(lower_node, lower_node, n)
+                #ok = not BFS(p, lower_node, n)
+                ok = True
                 if ok:
                     new_edge = Edge(lower_node, upper_node, ks.id)
                     new_edge.insert()
 
-                # end = False
-                # u_n = upper_node
-                # while not end:
-                #     if not u_n.json_format()['lower_edge_ids']:
-                #         break
-                #     if lower_node.id in u_n.json_format()['lower_edge_ids']:
-                #         ok = False
-                #         break                    
-                #     else:
-                #         if u_n.json_format()['lower_edge_ids']:
-                #             u_n = Problem.query.filter(Problem.id == u_n.json_format()['lower_edge_ids'][0]).first()
-                #         else:
-                #             end = True
-
-                # end = False
-                # l_n = lower_node
-                # while not end:
-                #     if not l_n.json_format()['lower_edge_ids']:
-                #         break
-                #     if upper_node.id in l_n.json_format()['lower_edge_ids']:
-                #         ok = False
-                #         break
-                #     else:
-                #         if l_n.json_format()['lower_edge_ids']:
-                #             l_n = Problem.query.filter(Problem.id == l_n.json_format()['lower_edge_ids'][0]).first()
-                #         else:
-                #             end = True
-                # if ok:
-                #     new_edge = Edge(lower_node, upper_node, ks.id)
-                #     new_edge.insert()
-
-    # for i in range(n):
-
-    # for i in range(len(implications)):
-
-
-
-    # for question in questions:
-    #     p = Problem(question.title, ks.id, 0, 0)
-    #     p.insert()
     return ks.json_format()
 
 def BFS(curr, lower_node, n):
     if lower_node is None:
         return True
+
     # Mark all the vertices as not visited
-    visited = []
+    visited = [curr.id]
 
     # Create a queue for BFS
     queue = []
 
     # Mark the source node as 
     # visited and enqueue it
-    queue.append(lower_node.id)
+    #visited.append(curr.id)
+    queue.append(curr)
     
     while queue:
-        # Dequeue a vertex from 
-        # queue and print it
+
         s = queue.pop(0)
-        lower_node = Problem.query.filter_by(id=s).first()
-        # Get all adjacent vertices of the
-        # dequeued vertex s. If a adjacent
-        # has not been visited, then mark it
-        # visited and enqueue it
-        for edge in lower_node.lower_edges:
-            if edge.lower_node.id not in visited:
-                if edge.lower_node.id == curr.id:
+        lower_node = Problem.query.filter_by(id=s.id).first()
+   
+        for edge_id in lower_node.json_format()['lower_edge_ids']:
+            if edge_id not in visited:
+                if edge_id == lower_node.id:
                     return True
-                queue.append(edge.lower_node.id)
-                visited.append(edge.lower_node.id)
+                problem = Problem.query.filter_by(id=edge_id).first()
+                queue.append(problem)
+                visited.append(edge_id)
     return False
 
 @app.route("/compare/<int:id>")

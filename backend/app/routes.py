@@ -24,6 +24,7 @@ from flask_login import login_user, logout_user, current_user
 import datetime
 
 from flask import request
+from app.api.routes import knowledge_space
 
 
 # if not current_user.is_authenticated:
