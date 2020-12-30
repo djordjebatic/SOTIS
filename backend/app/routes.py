@@ -17,12 +17,14 @@ from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity, get_jwt_claims
 )
+
 from flask_principal import Identity, AnonymousIdentity, identity_changed, identity_loaded, RoleNeed, UserNeed
 from flask_login import login_user, logout_user, current_user
 
 import datetime
 
 from flask import request
+
 
 # if not current_user.is_authenticated:
 #     return current_app.login_manager.unauthorized()
