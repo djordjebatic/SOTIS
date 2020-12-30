@@ -238,6 +238,14 @@ class ProblemAPI(Resource):
     def get(self):
         return [problem.json_format() for problem in Problem.query.all()], 200
 
+    def get(self, problem_id):
+        problem = Problem.query.filter(Problem.id == problem_id).first()
+        if problem:
+            question = TestQuestion.query.filter(TestQuestion.problem == problem).first()
+            return question.json_format(), 200
+        else:
+            return {'error': 'Problem with id {} does\'t exist'.format(problem_id)}, 409
+
     def delete(self, problem_id):
         problem = Problem.query.filter(Problem.id == problem_id).first()
         if problem:

@@ -536,6 +536,14 @@ createGraph(knowledgeSpace){
   // Node 'mouseUp' handler
   onSelectNode = (viewNode: INode | null) => {
     // Deselect events will send Null viewNode
+    if (viewNode) {
+      console.log("INFO NODE: " + viewNode.id)
+      axios.get(url + 'problem/' + viewNode.id)
+        .then((resp) => {
+          NotificationManager.info(resp.data.title, '', 4000);
+      })
+    }
+
     this.setState({ selected: viewNode });
   };
 
