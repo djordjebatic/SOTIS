@@ -1,4 +1,6 @@
 import React from 'react'
+import { useHistory } from "react-router-dom";
+
 import {
   CBadge,
   CDropdown,
@@ -8,6 +10,25 @@ import {
   CImg
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
+import axios from 'axios'
+
+const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
+
+
+const logOut = () => {
+      axios({
+        method: 'post',
+        url: url + 'logout',
+        // headers: { "Authorization": AuthStr } ,   
+      }).then((response) => {
+      localStorage.removeItem("loggedInUser");
+      localStorage.removeItem("role");
+      window.location.replace('#/login');      }, 
+      (error) => {
+        console.log(error);
+      });
+  }
+
 
 const TheHeaderDropdown = () => {
   return (
@@ -17,16 +38,10 @@ const TheHeaderDropdown = () => {
       direction="down"
     >
       <CDropdownToggle className="c-header-nav-link" caret={false}>
-        <div className="c-avatar">
-          <CImg
-            src={'avatars/6.jpg'}
-            className="c-avatar-img"
-            alt="admin@bootstrapmaster.com"
-          />
-        </div>
+          <CIcon name="cil-user"/>
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
-        <CDropdownItem
+        {/* <CDropdownItem
           header
           tag="div"
           color="light"
@@ -61,15 +76,15 @@ const TheHeaderDropdown = () => {
           className="text-center"
         >
           <strong>Settings</strong>
-        </CDropdownItem>
-        <CDropdownItem>
+        </CDropdownItem> */}
+        <CDropdownItem to="/profile">
           <CIcon name="cil-user" className="mfe-2" />Profile
         </CDropdownItem>
-        <CDropdownItem>
-          <CIcon name="cil-settings" className="mfe-2" /> 
-          Settings
+        <CDropdownItem onClick ={e => logOut()}>
+          <CIcon name="cil-arrow-right" className="mfe-2" /> 
+          Logout
         </CDropdownItem>
-        <CDropdownItem>
+        {/* <CDropdownItem>
           <CIcon name="cil-credit-card" className="mfe-2" /> 
           Payments
           <CBadge color="secondary" className="mfs-auto">42</CBadge>
@@ -83,7 +98,7 @@ const TheHeaderDropdown = () => {
         <CDropdownItem>
           <CIcon name="cil-lock-locked" className="mfe-2" /> 
           Lock Account
-        </CDropdownItem>
+        </CDropdownItem> */}
       </CDropdownMenu>
     </CDropdown>
   )

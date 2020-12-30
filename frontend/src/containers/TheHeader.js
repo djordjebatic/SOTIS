@@ -44,20 +44,6 @@ const TheHeader = () => {
 
   const history = useHistory();
 
-const logOut = () => {
-      axios({
-            method: 'post',
-            url: url + 'logout',
-           // headers: { "Authorization": AuthStr } ,   
-        }).then((response) => {
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("role");
-    history.push('/login');        }, (error) => {
-            console.log(error);
-        });
-
-  }
-
   return (
     <CHeader withSubheader>
       <CToggler
@@ -76,30 +62,22 @@ const logOut = () => {
 
       <CHeaderNav className="d-md-down-none mr-auto">
         <CHeaderNavItem className="px-3" >
-          <CHeaderNavLink to="/tests">Tests</CHeaderNavLink>
+          <CHeaderNavLink to="/courses">Courses</CHeaderNavLink>
         </CHeaderNavItem>
         </CHeaderNav>
-          <div className="d-md-down-none mfe-2 c-subheader-nav">
+          {/* <div className="d-md-down-none mfe-2 c-subheader-nav">
             <CButton className="c-subheader-nav-link" href="#" onClick ={e => logOut()}>
-              <CIcon name="cil-account-logout" alt="Settings" />&nbsp;Logout
+              <CIcon name="cil-exit-to-app" alt="Settings" />&nbsp;Logout
             </CButton>
-          </div>
-        {/*
-        <CHeaderNavItem  className="px-3">
-          <CHeaderNavLink to="/users">Users</CHeaderNavLink>
-        </CHeaderNavItem>
-        <CHeaderNavItem className="px-3">
-          <CHeaderNavLink>Settings</CHeaderNavLink>
-        </CHeaderNavItem>
-      </CHeaderNav>
+          </div> */}
 
       <CHeaderNav className="px-3">
-        <TheHeaderDropdownNotif/>
+        {/* <TheHeaderDropdownNotif/>
         <TheHeaderDropdownTasks/>
-        <TheHeaderDropdownMssg/>
+        <TheHeaderDropdownMssg/> */}
         <TheHeaderDropdown/>
       </CHeaderNav>
-*/}
+
       <CSubheader className="px-3 justify-content-between">
         <CBreadcrumbRouter 
           className="border-0 c-subheader-nav m-0 px-0 px-md-3" 

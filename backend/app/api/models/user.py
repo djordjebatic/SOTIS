@@ -33,7 +33,6 @@ class User(db.Model, UserMixin):
         self.name = name
         self.last_name = last_name
         self.username = username
-        self.password = password
         self.email = email
         self.active = True
         self.password = bcrypt.generate_password_hash(password).decode("utf-8")

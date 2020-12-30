@@ -28,5 +28,5 @@ class Professor(db.Model):
         return {
             'id': self.id,
             'user': user.json_format(),
-            'tests_created': [test.json_format() for test in self.tests_created]
+            'tests_created': [test.json_format() for test in self.tests_created],
         }

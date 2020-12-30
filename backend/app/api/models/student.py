@@ -34,5 +34,5 @@ class Student(db.Model):
         return {
             'id': self.id,
             'user': user.json_format(),
-            'test_takes': [test_take.json_format() for test_take in self.test_takes]
+            'test_takes': [test_take.json_format() for test_take in self.test_takes],
         }

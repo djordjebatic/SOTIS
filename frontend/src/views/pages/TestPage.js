@@ -68,7 +68,7 @@ class TestPage extends RoleAwareComponent {
     const { id } = this.props.match.params;
     axios({
       method: 'get',
-      url: url + 'test_take/' + id,
+      url: url + 'test_take/' + id + '/1',
     }).then((response) => {
       this.setState({ testTake: response.data.test_take, test:response.data.test })
     }, (error) => {
@@ -133,7 +133,7 @@ class TestPage extends RoleAwareComponent {
 
       </div>
     );
-    return this.rolesMatched() ? ret : <Redirect to="/tests" />;
+    return this.rolesMatched() ? ret : <Redirect to="/courses" />;
   }
 }
 

@@ -60,9 +60,9 @@ class TakeTest extends RoleAwareComponent {
     const { id } = this.props.match.params;
     axios({
       method: 'get',
-      url: url + 'test/' + id,
+      url: url + 'test_take/' + id + '/0',
     }).then((response) => {
-      this.setState({ test: response.data })
+      this.setState({ test: response.data.test })
       this.generateAccordion()
     }, (error) => {
       console.log(error);
@@ -92,9 +92,10 @@ class TakeTest extends RoleAwareComponent {
   submitAnswers() {
     const { id } = this.props.match.params;
     let data = {
-      test_id: id,
+      test_id: this.state.test.id,
       score: 0,
-      test: this.state.test
+      test: this.state.test,
+      test_take_id: id
     }
     let token = localStorage.getItem("loggedInUser")
     let AuthStr = 'Bearer '.concat(token);       
@@ -161,7 +162,7 @@ class TakeTest extends RoleAwareComponent {
         </CCol>
       </div>
     );
-    return this.rolesMatched() ? ret : <Redirect to="/tests" />;
+    return this.rolesMatched() ? ret : <Redirect to="/courses" />;
   }
 }
 

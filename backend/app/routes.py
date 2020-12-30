@@ -11,6 +11,7 @@ from app.api.models.user import User
 from app.api.models.role import Role
 from app.api.models.professor import Professor
 from app.api.models.student import Student
+from app.api.models.course import Course
 from flask_restful import Resource, Api
 from flask import request, jsonify, current_app, session
 from flask_jwt_extended import (
@@ -21,90 +22,23 @@ from flask_jwt_extended import (
 from flask_principal import Identity, AnonymousIdentity, identity_changed, identity_loaded, RoleNeed, UserNeed
 from flask_login import login_user, logout_user, current_user
 
-import datetime
 
-from flask import request
-from app.api.routes import knowledge_space
+from app.api.service.knowledge_space import KnowledgeSpaceAPI, CompareKnowledgeSpace, GenerateRealKnowledgeSpace,\
+    GetKnowledgeSpace
+from app.api.service.auth import UserRegistration, UserLogin, UserLogout
+from app.api.service.users import UserAPI, UsersAPI
+from app.api.service.courses import CourseAPI, CoursesListAPI, CourseTestsAPI
+from app.api.service.tests import GetTestAPI, GetTestTakeAPI
 
 
 # if not current_user.is_authenticated:
 #     return current_app.login_manager.unauthorized()
-
-class UserRegistration(Resource):
-    def post(self):
-        data = request.get_json()
-        # TODO change after adding roles (User class)
-        if User.query.filter(User.username == data['username']).first():
-            return {'error': 'User already exists'}, 409
-
-        # TODO hash pasword (flask_jwt)
-        user = User(name=data['name'], last_name=data['last_name'], username=data['username'],
-                    password=data['password'], email=data['email'])
-        role = Role.query.filter(Role.name == 'ROLE_STUDENT').first()
-        user.add_role(role)
-        user.insert()
-        student = Student(user_id=user.id)
-        student.insert()
-
-        return student.json_format(), 200
-
-
-class UserLogin(Resource):
-    # def post(self):
-    #     data = request.get_json()
-    #     # TODO change after adding roles (User class)
-    #     user = Student.query.filter(Student.username == data['username']).first()
-    #     if not user or bcrypt.check_password_hash(user.password, data['password']:
-    #         return {'error': 'Username and/or password don\'t match'}, 409
-    #     else:
-    #         # TODO access token (flask_jwt)
-    #         return user.json_format(), 200
-    def post(self):
-        if current_user.is_authenticated:
-            return 'user is already logged in', 403
-
-        data = request.get_json()
-        user = User.query.filter_by(username=data.get('username')).first()
-        if not user or not bcrypt.check_password_hash(user.password, data['password']):
-            return {'error': 'Username and/or password don\'t match'}, 404
-
-        # auth_token = user.encode_auth_token(user.username)
-        expires = datetime.timedelta(days=365)
-        auth_token = create_access_token(identity=user.username, expires_delta=expires)
-        login_user(user, remember=True)
-
-        identity_changed.send(app,
-                              identity=Identity(user.id))
-        # session['username'] = user.username
-        if auth_token:
-            responseObject = {
-                'status': 'success',
-                'message': 'Successfully logged in.',
-                'auth_token': auth_token,
-                'role': user.roles[0].name
-            }
-            return responseObject, 200
 
 
 # @app.before_request
 # def before_request():
 #     g.user = current_user
 #     print ('current_user: %s, g.user:, leaving bef_req' % (current_user))
-
-
-@app.route('/logout', methods=['POST', 'GET'])
-def logout():
-    if current_user.is_authenticated:
-        logout_user()
-        # Remove session keys set by Flask-Principal
-        for key in ('identity.name', 'identity.auth_type'):
-            session.pop(key, None)
-
-        # Tell Flask-Principal the user is anonymous
-        identity_changed.send(current_app._get_current_object(),
-                              identity=AnonymousIdentity())
-        return 'Logged out', 200
-    return 'OK', 200
 
 
 class CreateTest(Resource):
@@ -165,7 +99,7 @@ class CreateTest(Resource):
         user = User.query.filter_by(username=username).first()
         professor = Professor.query.filter_by(user_id=user.id).first()
         # TODO checks
-        test = TestModel(title=data['title'], professor_id=professor.id, max_score=data['max_score'])
+        test = TestModel(title=data['title'], professor_id=professor.id, max_score=data['max_score'], course_id=data['course_id'])
         test.insert()
         questions = data['questions']
 
@@ -193,7 +127,27 @@ class TestQuestionsAPI(Resource):
         return test.json_format()['test_questions'], 200
 
 
-class CreateTestTake(Resource):
+class TestTakeAPI(Resource):
+    @jwt_required
+    def get(self):
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+        student = Student.query.filter_by(user_id=user.id).first()
+        ret = []
+        for test_take in student.test_takes:
+            test = TestModel.query.get(test_take.test_id)
+            course = Course.query.get(test.course_id)
+            temp = {
+                "id": test_take.id,
+                "title": test.title,
+                "course": course.title,
+                "max_score": test.max_score,
+                "score": test_take.score,
+                "done": test_take.done,
+            }
+            ret.append(temp)
+        return ret, 200
+
     @jwt_required
     def post(self):
         data = request.get_json()
@@ -203,8 +157,9 @@ class CreateTestTake(Resource):
         # TODO checks
         # TODO calculate score
         test = data['test']
-        test_take = TestTake(student_id=student.id, test_id=data['test_id'], score=0)
-        test_take.insert()
+        # test_take = TestTake(student_id=student.id, test_id=data['test_id'], score=0)
+        # test_take.insert()
+        test_take = TestTake.query.get(data['test_take_id'])
 
         questions = test['test_questions']
 
@@ -216,7 +171,8 @@ class CreateTestTake(Resource):
                                                   test_question_answer_id=answer['id'],
                                                   selected=answer['isCorrect'])
                 test_take_answer.insert()
-
+        test_take.done = True
+        test_take.update()
         return test_take.id, 200
 
 
@@ -338,81 +294,6 @@ class EdgeAPI(Resource):
             return {'error': 'Edge with id {} does\'t exist'.format(edge_id)}, 409
 
 
-class KnowledgeSpaceAPI(Resource):
-    def post(self):
-        data = request.get_json()
-        title = data['title']
-        test_id = data['test_id']
-        new_knowledge_space = KnowledgeSpace(title, test_id, False)
-        new_knowledge_space.insert()
-        # TODO add test_id on front
-        new_knowledge_space.test_id = new_knowledge_space.id
-        new_knowledge_space.insert()
-        return new_knowledge_space.json_format(), 200
-
-    def get(self):
-        return [knowledge_space.json_format() for knowledge_space in KnowledgeSpace.query.all()], 200
-
-    def put(self):
-        data = request.get_json()
-        id = data['id']
-        graph = data['graph']
-        edges = graph['edges']
-        nodes = graph['nodes']
-        for edge in edges:
-            e = Edge.query.get(int(edge['id']))
-            e.lower_id = edge['source']
-            e.higher_id = edge['target']
-            e.knowledge_space_id = id
-            e.insert()
-        for node in nodes:
-            p = Problem.query.get(int(node['id']))
-            p.x = node['x']
-            p.y = node['y']
-            p.knowledge_space_id = id
-            p.insert()
-        knowledge_space = KnowledgeSpace.query.get(int(id))
-        return knowledge_space.json_format(), 200
-
-
-class UserAPI(Resource):
-    def get(self):
-        # get the auth token
-        auth_header = request.headers.get('Authorization')
-        if auth_header:
-            auth_token = auth_header.split(" ")[1]
-        else:
-            auth_token = ''
-        if auth_token:
-            # resp = User.decode_auth_token(auth_token)
-            username = get_jwt_identity()
-            if not isinstance(username, str):
-                user = User.query.filter_by(username=username).first()
-                responseObject = {
-                    'status': 'success',
-                    'data': {
-                        'user_id': user.id,
-                        'username': user.username,
-                        'email': user.email,
-                        'admin': user.admin,
-                        'name': user.name,
-                        'last_name': user.lastname
-                    }
-                }
-                return responseObject, 200
-            responseObject = {
-                'status': 'fail',
-                'message': auth_token
-            }
-            return responseObject, 401
-        else:
-            responseObject = {
-                'status': 'fail',
-                'message': 'Provide a valid auth token.'
-            }
-            return responseObject, 401
-
-
 class FormatTestsAPI(Resource):
     def post(self):
         data = request.get_json()
@@ -465,7 +346,11 @@ class FormatTestsAPI(Resource):
 api = Api(app)
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
+api.add_resource(UserLogout, '/logout')
 api.add_resource(CreateTest, '/test')
+api.add_resource(TestTakeAPI, '/test_take')
+api.add_resource(ProblemAPI, '/problem')
+api.add_resource(EdgeAPI, '/edge')
 api.add_resource(CreateTestTake, '/test_take')
 api.add_resource(ProblemAPI, '/problem', '/problem/<problem_id>')
 api.add_resource(EdgeAPI, '/edge', '/edge/<edge_id>')
@@ -473,7 +358,16 @@ api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
 api.add_resource(UserAPI, '/user')
 api.add_resource(TestQuestionsAPI, '/testquestions/<test_id>')
 api.add_resource(FormatTestsAPI, '/format-tests')
-
+api.add_resource(CompareKnowledgeSpace, "/compare/<int:ks_id>")
+api.add_resource(GenerateRealKnowledgeSpace, "/knowledge_space/generateReal/<int:ks_id>")
+api.add_resource(GetKnowledgeSpace, "/knowledge_space/<int:ks_id>")
+api.add_resource(CourseAPI, "/course/<int:course_id>")
+api.add_resource(CoursesListAPI, "/course")
+api.add_resource(UsersAPI, "/users/<string:role>")
+api.add_resource(CourseTestsAPI, "/course/<int:course_id>/tests")
+api.add_resource(GetTestAPI, "/test/<int:test_id>")
+api.add_resource(GetTestTakeAPI, "/test/<int:test_id>/test_take")
+api.add_resource(TestAPI, "/test/<int:id>")
 
 # def get_current_user():
 #     with current_app.request_context():
@@ -512,56 +406,24 @@ def load_user(userid):
 #         return Identity(current_user.id)
 #     return AnonymousIdentity()
 
-@app.route('/student', methods=['POST', 'GET'])
-@jwt_required
-# @login_required
-# @roles_accepted('ROLE_PROFESSOR')
-# @rbac.allow(['PROFESSOR'], methods=['GET'], with_children=False)
-# @professor_permission.require(http_exception=403)
-# @professor_permission.require()
-def handle_students():
-    username = get_jwt_identity()
-    print(username)
-    students = Student.query.all()
-    return {"students": [student.json_format() for student in students]}, 200
-
-
-@app.route("/test/<int:id>")
-def getTest(id):
-    test = TestModel.query.get(int(id))
-    questions = test.test_questions
-    for i in range(len(questions)):
-        question_answers = test.test_questions[i].test_question_answers
-        for j in range(len(question_answers)):
-            test.test_questions[i].test_question_answers[j].isCorrect = 0
-
-    return test.json_format(), 200
-
-
-@app.route("/test_take/<int:id>")
-def getTestTake(id):
+@app.route("/test_take/<int:id>/<int:done>")
+def getTestTake(id, done):
     test_take = TestTake.query.get(int(id))
     test = TestModel.query.get(int(test_take.test_id))
-    ret = {
-        "test_take": test_take.json_format(),
-        "test": test.json_format()
-    }
-    return ret, 200
-
-
-@app.route("/knowledge_space/<int:id>")
-def getKnowledgeSpace(id):
-    knowledge_space = KnowledgeSpace.query.get(int(id))
-    real = KnowledgeSpace.query.filter_by(test_id=knowledge_space.test_id, isReal=True).first()
-    if real is None:
+    if done == 1:
         ret = {
-            'expected': knowledge_space.json_format(),
-            'real': {}
+            "test_take": test_take.json_format(),
+            "test": test.json_format()
         }
     else:
+        questions = test.test_questions
+        for i in range(len(questions)):
+            question_answers = test.test_questions[i].test_question_answers
+            for j in range(len(question_answers)):
+                test.test_questions[i].test_question_answers[j].isCorrect = 0
         ret = {
-        'expected': knowledge_space.json_format(),
-        'real': real.json_format()
+            "test_take": test_take.json_format(),
+            "test": test.json_format()
         }
     return ret, 200
 

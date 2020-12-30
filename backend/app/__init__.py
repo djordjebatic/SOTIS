@@ -38,12 +38,12 @@ from app.api.models.problem_edge import Problem, Edge, KnowledgeSpace
 
 from app.api.models.user import User
 from app.api.models.role import Role
+from app.api.models.course import Course
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
 principals = Principal(app)
-
 
 # db.drop_all()
 # db.create_all()
@@ -54,18 +54,22 @@ principals = Principal(app)
 # role1.insert()
 # role2.insert()
 # role3.insert()
-
+#
 # u1 = User('Marko', 'Markovic', 'profesor', 'profesor123', 'profesor@email.com')
 # u1.add_role(role3)
 # u1.insert()
 # prof = Professor(u1.id)
 # prof.insert()
-
+#
 # u2 = User('Nikola', 'Nikolic', 'student', 'student123', 'student@email.com')
 # u2.add_role(role2)
 # u2.insert()
 # stud = Student(u2.id)
 # stud.insert()
+#
+# u3 = User('Milan', 'Milanovic', 'admin', 'admin123', 'admin@email.com', True)
+# u3.add_role(role1)
+# u3.insert()
 
 # test = TestModel(title='Test example', professor_id=prof.id, max_score=15)
 # test.insert()

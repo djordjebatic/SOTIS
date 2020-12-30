@@ -16,9 +16,9 @@ const nav = [
   },
   {
     _tag: 'CSidebarNavItem',
-    name: 'Knowledge Spaces',
-    to: '/knowledgeSpace',
-    icon: <CIcon name="cil-bookmark" customClasses="c-sidebar-nav-icon"/>
-  }
+    name: 'Courses',
+    to: '/courses',
+    icon: <CIcon name="cil-grid" customClasses="c-sidebar-nav-icon"/>
+  },
 ]
 export default nav

@@ -7,6 +7,12 @@ const TakeTest = React.lazy(() => import('./views/pages/TakeTest'))
 const TestPage = React.lazy(() => import('./views/pages/TestPage'))
 const Graph = React.lazy(() => import('./views/pages/Graph/Graph.js'));
 const KnowledgeSpace = React.lazy(() => import('./views/pages/KnowledgeSpace/KnowledgeSpace.js'));
+const Profile = React.lazy(() => import('./views/pages/Profile/Profile.js'));
+const ProfessorsPage = React.lazy(() => import('./views/pages/Professors/Professors.js'));
+const Courses = React.lazy(() => import('./views/pages/Courses/Courses.js'));
+const CoursePage = React.lazy(() => import('./views/pages/Courses/CoursePage.js'));
+const ShowTest = React.lazy(() => import('./views/pages/Test/ShowTest.js'));
+const StudentTests = React.lazy(() => import('./views/pages/Test/StudentTests.js'));
 
 const Toaster = React.lazy(() => import('./views/notifications/toaster/Toaster'));
 const Tables = React.lazy(() => import('./views/base/tables/Tables'));
@@ -83,8 +89,14 @@ const routes = [
   { path: '/knowledgeSpace/:id', exact: true, name: 'Graph', component: Graph },
   { path: '/knowledgeSpace', exact: true, name: 'Knowledge Spaces', component: KnowledgeSpace },
   { path: '/tests/takeTest/:id', exact:true, name: 'Test', component: TakeTest},
-  { path: '/tests/test/:id', exact:true, name: 'Test', component: TestPage}
-  
+  { path: '/tests/test/:id', exact:true, name: 'Test', component: TestPage},
+  { path: '/profile', exact:true, name: 'Profile', component: Profile},
+  { path: '/professors', exact:true, name: 'Professors', component: ProfessorsPage},
+  { path: '/courses', exact:true, name: 'Courses', component: Courses},
+  { path: '/courses/:id', exact:true, name: 'Course Details', component: CoursePage},
+  { path: '/test/:id', exact:true, name: 'Test Details', component: ShowTest},
+  { path: '/student/tests', exact: true, name: "Tests", component:StudentTests}
+
 ];
 
 export default routes;
