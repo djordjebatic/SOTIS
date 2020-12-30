@@ -564,58 +564,51 @@ createGraph(knowledgeSpace){
   // Node 'mouseUp' handler
   onSelectNode = (viewNode: INode | null) => {
     // Deselect events will send Null viewNode
+    if (viewNode) {
+      console.log("INFO NODE: " + viewNode.id)
+      axios.get(url + 'problem/' + viewNode.id)
+        .then((resp) => {
+          NotificationManager.info(resp.data.title, '', 4000);
+      })
+    }
+
     this.setState({ selected: viewNode });
   };
 
   // Edge 'mouseUp' handler
   onSelectEdge = (viewEdge: IEdge) => {
+    console.log("Edge: " + viewEdge.source + " " + viewEdge.target);
     this.setState({ selected: viewEdge });
   };
 
   // Updates the graph with a new node
   onCreateNode = (x: number, y: number) => {
-          if (this.state.currentTab === 'expected' ){
 
-    const graph = this.state.graph;
-
-    // This is just an example - any sort of logic
-    // could be used here to determine node type
-    // There is also support for subtypes. (see 'sample' above)
-    // The subtype geometry will underlay the 'type' geometry for a node
-    const type = Math.random() < 0.25 ? SPECIAL_TYPE : EMPTY_TYPE;
-
-    const viewNode = {
-      id: Date.now(),
-      title: '',
-      type,
-      x,
-      y,
-    };
-
-    graph.nodes = [...graph.nodes, viewNode];
-    this.setState({ graph });
-    this.saveGraph(graph)
-          }
   };
 
   // Deletes a node from the graph
   onDeleteNode = (viewNode: INode, nodeId: string, nodeArr: INode[]) => {
-          if (this.state.currentTab === 'expected' ){
+    console.log("Node: " + nodeId + viewNode[NODE_KEY] + viewNode);
 
-    const graph = this.state.graph;
-    // Delete any connected edges
-    const newEdges = graph.edges.filter((edge, i) => {
-      return (
-        edge.source !== viewNode[NODE_KEY] && edge.target !== viewNode[NODE_KEY]
-      );
-    });
+    axios.delete(url + 'problem/' + viewNode.id)
+        .then((resp) => {
+          this.getKnowledgeSpace();
+          const graph = this.state.graph;
+          // Delete any connected edges
+          const newEdges = graph.edges.filter((edge, i) => {
+            return (
+              edge.source !== viewNode[NODE_KEY] && edge.target !== viewNode[NODE_KEY]
+            );
+          });
 
-    graph.nodes = nodeArr;
-    graph.edges = newEdges;
+          graph.nodes = nodeArr;
+          graph.edges = newEdges;
 
-    this.setState({ graph, selected: null });
-    this.saveGraph(graph)
-          }
+          this.setState({ graph, selected: null });
+          this.saveGraph(graph)
+          NotificationManager.success('Node deleted', 'Success', 4000);
+        })
+        .catch((error) => NotificationManager.error('Error!', '', 4000))
   };
 
   // Creates a new node between two edges
@@ -680,6 +673,14 @@ createGraph(knowledgeSpace){
           if (this.state.currentTab === 'expected' ){
 
     const graph = this.state.graph;
+
+    /*axios.delete(url + 'edge/' + )
+        .then((resp) => NotificationManager.success('Questions sorted', 'Success', 4000))
+        .catch((error) => NotificationManager.error('All nodes must be connected!', 'Error!', 4000))
+    */
+
+    console.log("Edge: " + viewEdge.source + " " + viewEdge.target);
+
 
     graph.edges = edges;
     this.setState({

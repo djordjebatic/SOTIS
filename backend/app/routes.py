@@ -39,8 +39,8 @@ class UserRegistration(Resource):
 
         # TODO hash pasword (flask_jwt)
         user = User(name=data['name'], last_name=data['last_name'], username=data['username'],
-                          password=data['password'], email=data['email'])
-        role = Role.query.filter(Role.name=='ROLE_STUDENT').first()
+                    password=data['password'], email=data['email'])
+        role = Role.query.filter(Role.name == 'ROLE_STUDENT').first()
         user.add_role(role)
         user.insert()
         student = Student(user_id=user.id)
@@ -60,36 +60,37 @@ class UserLogin(Resource):
     #         # TODO access token (flask_jwt)
     #         return user.json_format(), 200
     def post(self):
-            if current_user.is_authenticated:
-                return 'user is already logged in', 403
+        if current_user.is_authenticated:
+            return 'user is already logged in', 403
 
-            data = request.get_json()
-            user = User.query.filter_by(username=data.get('username')).first()
-            if not user or not bcrypt.check_password_hash(user.password, data['password']):
-                return {'error': 'Username and/or password don\'t match'}, 404
-            
-            #auth_token = user.encode_auth_token(user.username)
-            expires = datetime.timedelta(days=365)
-            auth_token = create_access_token(identity=user.username, expires_delta=expires)
-            login_user(user, remember = True)
-            
-            identity_changed.send(app,
-                                  identity=Identity(user.id))
-            # session['username'] = user.username
-            if auth_token:
-                responseObject = {
-                    'status': 'success',
-                    'message': 'Successfully logged in.',
-                    'auth_token': auth_token,
-                    'role': user.roles[0].name
-                }
-                return responseObject, 200
+        data = request.get_json()
+        user = User.query.filter_by(username=data.get('username')).first()
+        if not user or not bcrypt.check_password_hash(user.password, data['password']):
+            return {'error': 'Username and/or password don\'t match'}, 404
+
+        # auth_token = user.encode_auth_token(user.username)
+        expires = datetime.timedelta(days=365)
+        auth_token = create_access_token(identity=user.username, expires_delta=expires)
+        login_user(user, remember=True)
+
+        identity_changed.send(app,
+                              identity=Identity(user.id))
+        # session['username'] = user.username
+        if auth_token:
+            responseObject = {
+                'status': 'success',
+                'message': 'Successfully logged in.',
+                'auth_token': auth_token,
+                'role': user.roles[0].name
+            }
+            return responseObject, 200
+
 
 # @app.before_request
 # def before_request():
 #     g.user = current_user
 #     print ('current_user: %s, g.user:, leaving bef_req' % (current_user))
-    
+
 
 @app.route('/logout', methods=['POST', 'GET'])
 def logout():
@@ -101,9 +102,10 @@ def logout():
 
         # Tell Flask-Principal the user is anonymous
         identity_changed.send(current_app._get_current_object(),
-                            identity=AnonymousIdentity())
+                              identity=AnonymousIdentity())
         return 'Logged out', 200
     return 'OK', 200
+
 
 class CreateTest(Resource):
     """
@@ -152,12 +154,13 @@ class CreateTest(Resource):
         ]
     }
     """
+
     @jwt_required
     def post(self):
         data = request.get_json()
         username = get_jwt_identity()
 
-        #role = get_jwt_claims()['role']
+        # role = get_jwt_claims()['role']
 
         user = User.query.filter_by(username=username).first()
         professor = Professor.query.filter_by(user_id=user.id).first()
@@ -236,6 +239,31 @@ class ProblemAPI(Resource):
     def get(self):
         return [problem.json_format() for problem in Problem.query.all()], 200
 
+    def get(self, problem_id):
+        problem = Problem.query.filter(Problem.id == problem_id).first()
+        if problem:
+            question = TestQuestion.query.filter(TestQuestion.problem == problem).first()
+            return question.json_format(), 200
+        else:
+            return {'error': 'Problem with id {} does\'t exist'.format(problem_id)}, 409
+
+    def delete(self, problem_id):
+        problem = Problem.query.filter(Problem.id == problem_id).first()
+        if problem:
+            # first delete connected edges
+            upper = Edge.query.filter(Edge.higher_id == problem_id).first()
+            if upper:
+                upper.delete()
+
+            lowers = Edge.query.filter(Edge.lower_id == problem_id).all()
+            for lower in lowers:
+                lower.delete()
+
+            problem.delete()
+            return [problem.json_format() for problem in Problem.query.all()], 200
+        else:
+            return {'error': 'Problem with id {} does\'t exist'.format(problem_id)}, 409
+
 
 class EdgeAPI(Resource):
     def post(self):
@@ -296,6 +324,19 @@ class EdgeAPI(Resource):
     def get(self):
         return [edge.json_format() for edge in Edge.query.all()], 200
 
+    def delete(self, edge_id):
+        edge = Edge.query.filter(Edge.id == edge_id).first()
+        if edge:
+            lower_node = edge.lower_node
+            if lower_node.root:
+                lower_node.root = False
+                lower_node.update()
+            edge.delete()
+
+            return [edge.json_format() for edge in Edge.query.all()], 200
+        else:
+            return {'error': 'Edge with id {} does\'t exist'.format(edge_id)}, 409
+
 
 class KnowledgeSpaceAPI(Resource):
     def post(self):
@@ -332,7 +373,8 @@ class KnowledgeSpaceAPI(Resource):
             p.insert()
         knowledge_space = KnowledgeSpace.query.get(int(id))
         return knowledge_space.json_format(), 200
-      
+
+
 class UserAPI(Resource):
     def get(self):
         # get the auth token
@@ -342,7 +384,7 @@ class UserAPI(Resource):
         else:
             auth_token = ''
         if auth_token:
-            #resp = User.decode_auth_token(auth_token)
+            # resp = User.decode_auth_token(auth_token)
             username = get_jwt_identity()
             if not isinstance(username, str):
                 user = User.query.filter_by(username=username).first()
@@ -369,6 +411,7 @@ class UserAPI(Resource):
                 'message': 'Provide a valid auth token.'
             }
             return responseObject, 401
+
 
 class FormatTestsAPI(Resource):
     def post(self):
@@ -424,13 +467,12 @@ api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(CreateTest, '/test')
 api.add_resource(CreateTestTake, '/test_take')
-api.add_resource(ProblemAPI, '/problem')
-api.add_resource(EdgeAPI, '/edge')
+api.add_resource(ProblemAPI, '/problem', '/problem/<problem_id>')
+api.add_resource(EdgeAPI, '/edge', '/edge/<edge_id>')
 api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
 api.add_resource(UserAPI, '/user')
 api.add_resource(TestQuestionsAPI, '/testquestions/<test_id>')
 api.add_resource(FormatTestsAPI, '/format-tests')
-
 
 
 # def get_current_user():
@@ -458,6 +500,7 @@ def on_identity_loaded(sender, identity):
         for role in current_user.roles:
             identity.provides.add(RoleNeed(role.name))
 
+
 @login_manager.user_loader
 def load_user(userid):
     return User.get(userid)
@@ -471,11 +514,11 @@ def load_user(userid):
 
 @app.route('/student', methods=['POST', 'GET'])
 @jwt_required
-#@login_required
-#@roles_accepted('ROLE_PROFESSOR')
-#@rbac.allow(['PROFESSOR'], methods=['GET'], with_children=False)
-#@professor_permission.require(http_exception=403)
-#@professor_permission.require()
+# @login_required
+# @roles_accepted('ROLE_PROFESSOR')
+# @rbac.allow(['PROFESSOR'], methods=['GET'], with_children=False)
+# @professor_permission.require(http_exception=403)
+# @professor_permission.require()
 def handle_students():
     username = get_jwt_identity()
     print(username)
@@ -523,12 +566,14 @@ def getKnowledgeSpace(id):
     return ret, 200
 
 
+
 @jwt.user_claims_loader
 def add_claims_to_access_token(identity):
     user = User.query.filter(User.username == identity).first()
     return {
         'role': user.roles[0].name
     }
+
 
 @jwt.expired_token_loader
 def my_expired_token_callback(expired_token):
