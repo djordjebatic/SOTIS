@@ -13,6 +13,15 @@ import {
   CInput,
   CFormText,
   CRow,
+  CCard,
+  CCardHeader,
+  CCardBody,
+  CTabs,
+  CNav,
+  CNavItem,
+  CNavLink,
+  CTabContent,
+  CTabPane
 } from '@coreui/react'
 
 import {
@@ -33,13 +42,15 @@ import GraphConfig, {
   SPECIAL_EDGE_TYPE,
   SPECIAL_TYPE,
   SKINNY_TYPE,
+  RED_EDGE_TYPE,
+  GREEN_EDGE_TYPE
 } from './graph-config'; // Configures node/edge types
 
 import axios from 'axios'
-import {NotificationManager, NotificationContainer} from 'react-notifications';
 
 import { RoleAwareComponent } from 'react-router-role-authorization'
 import {Redirect} from 'react-router-dom'
+import {NotificationManager} from 'react-notifications';
 
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
@@ -256,7 +267,13 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
         "test_id": null,
         "problems": [],
         "edges": []
-      }
+      },
+      realKnowledgeSpace: {
+        "test_id": null,
+        "problems": [],
+        "edges": []
+      },
+      currentTab: 'expected'
     };
 
     let arr = [];
@@ -275,8 +292,10 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
     this.saveEdge = this.saveEdge.bind(this)
     this.testQuestions = this.getTestQuestions.bind(this)
     this.handleDropDown = this.handleDropDown.bind(this);
+    this.handleTabChange = this.handleTabChange.bind(this);
+    this.compareGraphs = this.compareGraphs.bind(this)
+    this.generateReal = this.generateReal.bind(this)
     this.sortQuestions = this.sortQuestions.bind(this);
-
 
   }
 
@@ -322,10 +341,10 @@ getKnowledgeSpace(){
     method: 'get',
     url: url + 'knowledge_space/' + id,
   }).then((response) => {
-    this.setState({knowledgeSpaceTitle: response.data.title}, () => console.log(this.state.knowledgeSpaceTitle))
-    this.createGraph(response.data)
-
-    axios.get(url + 'testquestions/' + response.data.test_id)
+    this.setState({knowledgeSpaceTitle: response.data.expected.title}, () => console.log(this.state.knowledgeSpaceTitle))
+    this.setState({knowledgeSpace: response.data.expected, realKnowledgeSpace:response.data.real})
+    this.createGraph(response.data.expected)
+    axios.get(url + 'testquestions/' + response.data.expected.test_id)
         .then((resp) => {
           this.setState({testQuestions: resp.data}, () => console.log(this.state.testQuestions))
         })
@@ -399,24 +418,26 @@ createGraph(knowledgeSpace){
   }
 
   saveEdge(edge){
-    const { id } = this.props.match.params;
-    let data = {
-      "knowledge_space_id": id,
-      "lower_id" : edge.source,
-      "upper_id": edge.target  
+    if (this.state.currentTab === 'expected'){
+      const { id } = this.props.match.params;
+      let data = {
+        "knowledge_space_id": id,
+        "lower_id" : edge.source,
+        "upper_id": edge.target  
+      }
+      axios({
+        method: 'post',
+        url: url + 'edge',
+        //headers: { "Authorization": AuthStr } ,   
+        data: data
+    }).then((response) => {
+        this.getKnowledgeSpace()
+        return true
+    }, (error) => {
+        console.log(error);
+        return false
+    });
     }
-    axios({
-      method: 'post',
-      url: url + 'edge',
-      //headers: { "Authorization": AuthStr } ,   
-      data: data
-  }).then((response) => {
-      this.getKnowledgeSpace()
-      return true
-  }, (error) => {
-      console.log(error);
-      return false
-  });
   }
 
 
@@ -477,26 +498,28 @@ createGraph(knowledgeSpace){
   };
 
   addStartNode = () => {
-    const graph = this.state.graph;
-
-    // using a new array like this creates a new memory reference
-    // this will force a re-render
-    graph.nodes = [
-      {
-        id: Date.now(),
-        title: 'Node A',
-        type: SPECIAL_TYPE,
-        x: 0,
-        y: 0,
-      },
-      ...this.state.graph.nodes,
-    ];
-    this.setState({
-      graph,
-    });
-    this.saveGraph(graph)
+      if (this.state.currentTab === 'expected' ){
+        const graph = this.state.graph;
+      // using a new array like this creates a new memory reference
+      // this will force a re-render
+      graph.nodes = [
+        {
+          id: Date.now(),
+          title: 'Node A',
+          type: SPECIAL_TYPE,
+          x: 0,
+          y: 0,
+        },
+        ...this.state.graph.nodes,
+      ];
+      this.setState({
+        graph,
+      });
+      this.saveGraph(graph)
+    }
   };
   deleteStartNode = () => {
+    if (this.state.currentTab === 'expected' ){
     const graph = this.state.graph;
 
     graph.nodes.splice(0, 1);
@@ -507,6 +530,7 @@ createGraph(knowledgeSpace){
       graph,
     });
     this.saveGraph(graph)
+    }
   };
 
   handleChange = (event: any) => {
@@ -525,12 +549,16 @@ createGraph(knowledgeSpace){
   // Called by 'drag' handler, etc..
   // to sync updates from D3 with the graph
   onUpdateNode = (viewNode: INode) => {
+    if (this.state.currentTab === 'expected' ){
+
+
     const graph = this.state.graph;
     const i = this.getNodeIndex(viewNode);
 
     graph.nodes[i] = viewNode;
     this.setState({ graph });
     this.saveGraph(graph)
+    }
   };
 
   // Node 'mouseUp' handler
@@ -585,6 +613,8 @@ createGraph(knowledgeSpace){
 
   // Creates a new node between two edges
   onCreateEdge = (sourceViewNode: INode, targetViewNode: INode) => {
+          if (this.state.currentTab === 'expected' ){
+
     const graph = this.state.graph;
     // This is just an example - any sort of logic
     // could be used here to determine edge type
@@ -609,6 +639,7 @@ createGraph(knowledgeSpace){
         });
       }
     }
+          }
   };
 
   // Called when an edge is reattached to a different target.
@@ -617,6 +648,8 @@ createGraph(knowledgeSpace){
     targetViewNode: INode,
     viewEdge: IEdge
   ) => {
+          if (this.state.currentTab === 'expected' ){
+
     const graph = this.state.graph;
     const i = this.getEdgeIndex(viewEdge);
     const edge = JSON.parse(JSON.stringify(graph.edges[i]));
@@ -632,10 +665,13 @@ createGraph(knowledgeSpace){
       selected: edge,
     });
     this.saveGraph(graph)
+          }
   };
 
   // Called when an edge is deleted
   onDeleteEdge = (viewEdge: IEdge, edges: IEdge[]) => {
+          if (this.state.currentTab === 'expected' ){
+
     const graph = this.state.graph;
 
     /*axios.delete(url + 'edge/' + )
@@ -652,6 +688,7 @@ createGraph(knowledgeSpace){
       selected: null,
     });
     this.saveGraph(graph)
+          }
   };
 
   onUndo = () => {
@@ -680,6 +717,8 @@ createGraph(knowledgeSpace){
 
   // Pastes the selected node to mouse position
   onPasteSelected = (node: INode, mousePosition?: [number, number]) => {
+              if (this.state.currentTab === 'expected' ){
+
     const graph = this.state.graph;
 
     const newNode = {
@@ -692,6 +731,7 @@ createGraph(knowledgeSpace){
     graph.nodes = [...graph.nodes, newNode];
     this.forceUpdate();
     this.saveGraph(graph)
+              }
   };
 
   handleChangeLayoutEngineType = (event: any) => {
@@ -710,6 +750,85 @@ createGraph(knowledgeSpace){
    * Render
    */
 
+  handleTabChange(tab){
+    this.setState({currentTab: tab})
+    if (tab == 'expected'){
+      this.createGraph(this.state.knowledgeSpace)
+    }
+    else if (tab == 'real'){
+      this.createGraph(this.state.realKnowledgeSpace)
+    }
+    else{
+      this.compareGraphs()
+    }
+  }
+
+  compareGraphs(){
+    const { id } = this.props.match.params;
+    let knowledgeSpace = {}
+    axios({
+      method: 'get',
+      url: url + 'compare/' + id,
+    }).then((response) => {
+      knowledgeSpace = response.data
+       let edges = []
+    let nodes = []
+    let edge = {}
+    let node = {}
+    var i
+    for (i in knowledgeSpace.edges) {
+      let t = EMPTY_EDGE_TYPE
+      if (knowledgeSpace.edges[i].color === 'red'){
+        t = RED_EDGE_TYPE
+      }
+      else if(knowledgeSpace.edges[i].color === 'green'){
+        t = GREEN_EDGE_TYPE
+      }
+      edge = {
+        id: knowledgeSpace.edges[i].id,
+        source: knowledgeSpace.edges[i].lower_id,
+        target: knowledgeSpace.edges[i].higher_id,
+        type: t
+      }
+      edges.push(edge)
+    } 
+    for (i in knowledgeSpace.problems){
+      node = {
+        id: knowledgeSpace.problems[i].id,
+        title: knowledgeSpace.problems[i].title,
+        type: EMPTY_TYPE,
+        x: knowledgeSpace.problems[i].x,
+        y: knowledgeSpace.problems[i].y,
+      }
+      nodes.push(node)
+    }
+
+    const temp: IGraph = {
+      edges: edges,
+      nodes: nodes
+    };
+    this.setState({graph:temp})
+    }, (error) => {
+      console.log(error);
+    }); 
+
+  }
+
+  generateReal(){
+  const { id } = this.props.match.params;
+    axios({
+      method: 'put',
+      url: url + 'knowledge_space/generateReal/' + id,
+      //headers: { "Authorization": AuthStr } ,   
+  }).then((response) => {
+      this.setState({ realKnowledgeSpace: response.data })
+      this.createGraph(response.data)
+      NotificationManager.success('Real knowledge space successfuly generated', 'Success!', 4000);
+  }, (error) => {
+      console.log(error);
+  });
+  }
+
   render() {
     const { nodes, edges } = this.state.graph;
     const selected = this.state.selected;
@@ -720,8 +839,10 @@ createGraph(knowledgeSpace){
       <>
             <CCol xs="12" lg="12">
         <div className="graph-header">
-            <h2>{this.state.knowledgeSpaceTitle}<CButton style={{marginBottom:"20px", float:"right"}} id="confirmButton" onClick={() => this.setState({showModal:true})} color="success" className="px-4">New problem</CButton>
-            <CButton style={{marginTop:"60px", float:"right"}} id="confirmButton" onClick={() => this.sortQuestions()} color="success" className="px-4">Sort test questions</CButton>
+            <h2>{this.state.knowledgeSpaceTitle}
+            <CButton hidden={this.state.currentTab !== 'expected'} style={{float:"right"}} id="confirmButton" onClick={() => this.setState({showModal:true})} color="success" className="px-4">New problem</CButton>
+            <CButton hidden={this.state.currentTab !== 'real'} style={{float:"right"}} id="confirmButton" onClick={() => this.generateReal()} color="success" className="px-4">Generate</CButton>
+            <CButton hidden={this.state.currentTab !== 'expected'} style={{marginRight:"20px", float:"right"}} id="confirmButton" onClick={() => this.sortQuestions()} color="success" className="px-4">Sort test questions</CButton>
             </h2>
             <CModal 
               show={this.state.showModal} 
@@ -796,7 +917,36 @@ createGraph(knowledgeSpace){
             </select>
           </div> */}
         </div>
-        <div id="graph" style={{ height:"700px" }}>
+        <CCard>
+          <CCardBody>
+            <CTabs activeTab="expected">
+              <CNav variant="tabs">
+                <CNavItem onClick={() => this.handleTabChange('expected')}>
+                  <CNavLink data-tab="expected">
+                    Expected
+                  </CNavLink>
+                </CNavItem>
+                <CNavItem onClick={() => this.handleTabChange('real')}>
+                  <CNavLink data-tab="real">
+                    Real
+                  </CNavLink>
+                </CNavItem>
+                <CNavItem onClick={() => this.handleTabChange('compare')}>
+                  <CNavLink data-tab="compare">
+                    Compare
+                  </CNavLink>
+                </CNavItem>
+              </CNav>
+              <CTabContent>
+                <CTabPane data-tab="expected">
+                </CTabPane>
+                <CTabPane data-tab="real">
+                </CTabPane>
+                <CTabPane data-tab="compare">
+                </CTabPane>
+              </CTabContent>
+            </CTabs>
+                              <div id="graph" style={{ height:"700px" }}>
           <GraphView
             ref={el => (this.GraphView = el)}
             nodeKey={NODE_KEY}
@@ -820,7 +970,9 @@ createGraph(knowledgeSpace){
             layoutEngineType={this.state.layoutEngineType}
           />
         </div>
-        </CCol>
+          </CCardBody>
+        </CCard>
+      </CCol>
       </>
     );
     return ret;

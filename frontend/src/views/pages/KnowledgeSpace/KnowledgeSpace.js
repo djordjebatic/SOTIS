@@ -152,7 +152,7 @@ class KnowledgeSpace extends RoleAwareComponent {
                 </CCol>
                 <CRow>
                     {(this.state.knowledgeSpaces).map((ks, index) =>
-                        <CCol xs="12" sm="6" lg="3">
+                        <CCol xs="12" sm="6" lg="3" hidden={ks.isReal}>
                             <CWidgetBrand onClick={event => this.props.history.push('/knowledgeSpace/'+ ks.id)}
                                 color={this.getColor(index)}
                                 rightHeader={ks.problems.length}
