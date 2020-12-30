@@ -30,7 +30,9 @@ class KnowledgeSpace extends RoleAwareComponent {
             showModal: false,
             title: '',
             errorTitle: '',
-            buttonDisabled: true
+            buttonDisabled: true,
+            test_id: 1,
+            tests: []
         };
 
         let arr = [];
@@ -40,14 +42,34 @@ class KnowledgeSpace extends RoleAwareComponent {
 
 
         this.getKnowledgeSpaces = this.getKnowledgeSpaces.bind(this);
+        this.getTests = this.getTests.bind(this);
         this.addKnowledgeSpace = this.addKnowledgeSpace.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.validateTitle = this.validateTitle.bind(this);
         this.resetAll = this.resetAll.bind(this);
+        this.handleDropDown = this.handleDropDown.bind(this);
     }
 
     componentDidMount() {
         this.getKnowledgeSpaces()
+        this.getTests()
+    }
+
+    handleDropDown(e){
+        console.log("OPCIJA" + e.target.value)
+        this.setState({test_id: e.target.value})
+    }
+
+    getTests() {
+        axios({
+            method: 'get',
+            url: url + 'test',
+        }).then((response) => {
+            console.log(response);
+            this.setState({ tests: response.data })
+        }, (error) => {
+            console.log(error);
+        });
     }
 
     getKnowledgeSpaces() {
@@ -65,7 +87,7 @@ class KnowledgeSpace extends RoleAwareComponent {
     addKnowledgeSpace() {
         let data = {
             "title": this.state.title,
-            "test_id": 1
+            "test_id": this.state.test_id
         }
         axios({
             method: 'post',
@@ -73,9 +95,8 @@ class KnowledgeSpace extends RoleAwareComponent {
             //headers: { "Authorization": AuthStr } ,   
             data: data
         }).then((response) => {
-            let temp = this.state.knowledgeSpaces
-            temp.push(response.data)
-            this.setState({ knowledgeSpaces: temp })
+            this.getKnowledgeSpaces()
+            this.getTests()
             this.resetAll()
         }, (error) => {
             console.log(error);
@@ -165,6 +186,24 @@ class KnowledgeSpace extends RoleAwareComponent {
                             />
                             <CFormText className="help-block"><p style={{ color: "red" }}>{this.state.errorTitle}</p></CFormText>
 
+                        </CFormGroup>
+                        <CFormGroup>
+                            <CLabel htmlFor="problemTitle">Question</CLabel>
+                            <select
+                                value={this.state.test_id}
+                                onChange={this.handleDropDown}
+                            >
+                            <option selected> -- select an option -- </option>
+                                {
+                                    this.state.tests.map(function (item) {
+                                        if (item.knowledge_space_id === '') {
+                                            return <option value={item.id}>{item.title}</option>;
+                                        }
+                                    })
+                                }
+                            </select>
+                            {this.state.test_id}
+                            <CFormText className="help-block"><p style={{ color: "red" }}>{this.state.errorTitle}</p></CFormText>
                         </CFormGroup>
                     </CModalBody>
                     <CModalFooter>

@@ -10,7 +10,7 @@ class TestModel(db.Model):
     professor_id = db.Column(db.Integer, db.ForeignKey('professor.id'), nullable=False)
     test_questions = db.relationship('TestQuestion', backref='test', lazy='subquery')
     test_takes = db.relationship('TestTake', backref='test', lazy='subquery')
-    knowledge_spaces = db.relationship('KnowledgeSpace', backref='test', lazy='subquery')
+    knowledge_space = db.relationship('KnowledgeSpace', uselist=False, backref='test', lazy='subquery')
 
     def __init__(self, title, max_score, professor_id):
         self.title = title
@@ -29,11 +29,16 @@ class TestModel(db.Model):
         db.session.commit()
 
     def json_format(self):
+        if self.knowledge_space:
+            knowledge_space_id = self.knowledge_space.id
+        else:
+            knowledge_space_id = ''
         return {
             "id": self.id,
             "title": self.title,
             "max_score": self.max_score,
             "professor_id": self.professor_id,
             "test_questions": [test_question.json_format() for test_question in self.test_questions],
-            "test_takes": [test_take.json_format() for test_take in self.test_takes]
+            "test_takes": [test_take.json_format() for test_take in self.test_takes],
+            "knowledge_space_id": knowledge_space_id
         }
