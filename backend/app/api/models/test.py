@@ -31,6 +31,10 @@ class TestModel(db.Model):
         db.session.commit()
 
     def json_format(self):
+        if self.knowledge_space:
+            knowledge_space_id = self.knowledge_space.id
+        else:
+            knowledge_space_id = ''
         return {
             "id": self.id,
             "title": self.title,

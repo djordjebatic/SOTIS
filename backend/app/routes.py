@@ -34,36 +34,12 @@ from app.api.service.tests import GetTestAPI, GetTestTakeAPI
 # if not current_user.is_authenticated:
 #     return current_app.login_manager.unauthorized()
 
+
 # @app.before_request
 # def before_request():
 #     g.user = current_user
 #     print ('current_user: %s, g.user:, leaving bef_req' % (current_user))
 
-class TestAPI(Resource):
-    def get(self, id):
-        test = TestModel.query.get(int(id))
-        questions = test.test_questions
-        for i in range(len(questions)):
-            question_answers = test.test_questions[i].test_question_answers
-            for j in range(len(question_answers)):
-                test.test_questions[i].test_question_answers[j].isCorrect = 0
-
-        return test.json_format(), 200
-
-    def put(self, id):
-        data = request.get_json()
-        students = data['students']
-        for student in students:
-            new_testTake = TestTake(test_id=id, student_id=student['id'], score=0)
-            new_testTake.insert()
-        test = TestModel.query.get(int(id))
-        questions = test.test_questions
-        for i in range(len(questions)):
-            question_answers = test.test_questions[i].test_question_answers
-            for j in range(len(question_answers)):
-                test.test_questions[i].test_question_answers[j].isCorrect = 0
-
-        return test.json_format(), 200
 
 class CreateTest(Resource):
     """
@@ -112,12 +88,13 @@ class CreateTest(Resource):
         ]
     }
     """
+
     @jwt_required
     def post(self):
         data = request.get_json()
         username = get_jwt_identity()
 
-        #role = get_jwt_claims()['role']
+        # role = get_jwt_claims()['role']
 
         user = User.query.filter_by(username=username).first()
         professor = Professor.query.filter_by(user_id=user.id).first()
@@ -218,6 +195,31 @@ class ProblemAPI(Resource):
     def get(self):
         return [problem.json_format() for problem in Problem.query.all()], 200
 
+    def get(self, problem_id):
+        problem = Problem.query.filter(Problem.id == problem_id).first()
+        if problem:
+            question = TestQuestion.query.filter(TestQuestion.problem == problem).first()
+            return question.json_format(), 200
+        else:
+            return {'error': 'Problem with id {} does\'t exist'.format(problem_id)}, 409
+
+    def delete(self, problem_id):
+        problem = Problem.query.filter(Problem.id == problem_id).first()
+        if problem:
+            # first delete connected edges
+            upper = Edge.query.filter(Edge.higher_id == problem_id).first()
+            if upper:
+                upper.delete()
+
+            lowers = Edge.query.filter(Edge.lower_id == problem_id).all()
+            for lower in lowers:
+                lower.delete()
+
+            problem.delete()
+            return [problem.json_format() for problem in Problem.query.all()], 200
+        else:
+            return {'error': 'Problem with id {} does\'t exist'.format(problem_id)}, 409
+
 
 class EdgeAPI(Resource):
     def post(self):
@@ -278,9 +280,18 @@ class EdgeAPI(Resource):
     def get(self):
         return [edge.json_format() for edge in Edge.query.all()], 200
 
+    def delete(self, edge_id):
+        edge = Edge.query.filter(Edge.id == edge_id).first()
+        if edge:
+            lower_node = edge.lower_node
+            if lower_node.root:
+                lower_node.root = False
+                lower_node.update()
+            edge.delete()
 
-
-      
+            return [edge.json_format() for edge in Edge.query.all()], 200
+        else:
+            return {'error': 'Edge with id {} does\'t exist'.format(edge_id)}, 409
 
 
 class FormatTestsAPI(Resource):
@@ -340,6 +351,9 @@ api.add_resource(CreateTest, '/test')
 api.add_resource(TestTakeAPI, '/test_take')
 api.add_resource(ProblemAPI, '/problem')
 api.add_resource(EdgeAPI, '/edge')
+api.add_resource(CreateTestTake, '/test_take')
+api.add_resource(ProblemAPI, '/problem', '/problem/<problem_id>')
+api.add_resource(EdgeAPI, '/edge', '/edge/<edge_id>')
 api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
 api.add_resource(UserAPI, '/user')
 api.add_resource(TestQuestionsAPI, '/testquestions/<test_id>')
@@ -380,6 +394,7 @@ def on_identity_loaded(sender, identity):
         for role in current_user.roles:
             identity.provides.add(RoleNeed(role.name))
 
+
 @login_manager.user_loader
 def load_user(userid):
     return User.get(userid)
@@ -390,7 +405,6 @@ def load_user(userid):
 #     if current_user.is_authenticated:
 #         return Identity(current_user.id)
 #     return AnonymousIdentity()
-
 
 @app.route("/test_take/<int:id>/<int:done>")
 def getTestTake(id, done):
@@ -412,6 +426,7 @@ def getTestTake(id, done):
             "test": test.json_format()
         }
     return ret, 200
+
 
 
 @jwt.user_claims_loader
