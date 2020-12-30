@@ -3,6 +3,9 @@ import axios from "axios";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+import PropTypes from "prop-types";
+import { withRouter } from "react-router";
+
 import {
   CCard,
   CRow,
@@ -16,7 +19,7 @@ import {
   CFade,
   CLink,
   CCardFooter,
-  CBadge
+  CBadge,
 } from "@coreui/react";
 import CIcon from "@coreui/icons-react";
 import * as _ from "lodash";
@@ -24,12 +27,17 @@ import * as _ from "lodash";
 import { RoleAwareComponent } from "react-router-role-authorization";
 import { Redirect } from "react-router-dom";
 
-import NewTest from "./NewTest"
+import NewTest from "./NewTest";
 
 const url =
   process.env.REACT_APP_DOMAIN + ":" + process.env.REACT_APP_PORT + "/";
 
 class TestsPage extends RoleAwareComponent {
+  static propTypes = {
+    match: PropTypes.object.isRequired,
+    location: PropTypes.object.isRequired,
+    history: PropTypes.object.isRequired
+  };
   constructor(props) {
     super(props);
     this.state = {
@@ -38,7 +46,7 @@ class TestsPage extends RoleAwareComponent {
       collapsed: false,
       showCard: true,
       role: "",
-      hideNewTest: true
+      hideNewTest: true,
     };
 
     let arr = [];
@@ -100,24 +108,30 @@ class TestsPage extends RoleAwareComponent {
     });
   }
 
-  handleNewTest = (hideNewTest) =>{
-    this.setState({hideNewTest: hideNewTest})
-    this.getTests()
-  }
+  handleNewTest = (hideNewTest) => {
+    this.setState({ hideNewTest: hideNewTest });
+    this.getTests();
+  };
 
   render() {
+    const { match, location, history } = this.props;
     let ret = (
       <>
         <CButton
-          hidden={this.state.role !== "ROLE_PROFESSOR" || !this.state.hideNewTest}
+          hidden={
+            this.state.role !== "ROLE_PROFESSOR" || !this.state.hideNewTest
+          }
           style={{ marginLeft: "10px", marginBottom: "20px" }}
           color="success"
-          onClick={(event) =>  this.setState({hideNewTest:false})}
+          onClick={(event) => this.setState({ hideNewTest: false })}
         >
           +
         </CButton>
-        <div hidden = {this.state.hideNewTest}>
-        <NewTest course_id={this.props.course_id} testsPageCallback = {this.handleNewTest}/>
+        <div hidden={this.state.hideNewTest}>
+          <NewTest
+            course_id={this.props.course_id}
+            testsPageCallback={this.handleNewTest}
+          />
         </div>
         <CRow hidden={!this.state.hideNewTest}>
           {this.state.tests.map((test, index) => (
@@ -157,9 +171,15 @@ class TestsPage extends RoleAwareComponent {
                                 }}
                               >
                                 <CCardHeader>
-                                  {indexQ + 1}. {question.title} 
-                                        <CBadge shape="pill" color="primary" className="float-right">{question.points}</CBadge>
-                                                                    </CCardHeader>
+                                  {indexQ + 1}. {question.title}
+                                  <CBadge
+                                    shape="pill"
+                                    color="primary"
+                                    className="float-right"
+                                  >
+                                    {question.points}
+                                  </CBadge>
+                                </CCardHeader>
                                 <CCardBody style={{ padding: "3px" }}>
                                   {question.test_question_answers.map(
                                     (answer, indexA) => (
@@ -182,10 +202,19 @@ class TestsPage extends RoleAwareComponent {
                         hidden={this.state.role !== "ROLE_STUDENT"}
                         color="primary"
                         onClick={(event) =>
-                          this.props.history.push("/tests/takeTest/" + test.id)
+                          history.push("/tests/takeTest/" + test.id)
                         }
                       >
                         Take test
+                      </CButton>
+                      <CButton
+                        hidden={this.state.role === "ROLE_STUDENT"}
+                        color="primary"
+                        onClick={(event) =>
+                          history.push("/test/" + test.id)
+                        }
+                      >
+                        Details
                       </CButton>
                     </CCardFooter>
                   </CCollapse>
@@ -200,4 +229,5 @@ class TestsPage extends RoleAwareComponent {
   }
 }
 
-export default TestsPage;
+const TestsPageWithRouter = withRouter(TestsPage);
+export default TestsPageWithRouter;

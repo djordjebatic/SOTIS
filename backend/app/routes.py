@@ -11,6 +11,7 @@ from app.api.models.user import User
 from app.api.models.role import Role
 from app.api.models.professor import Professor
 from app.api.models.student import Student
+from app.api.models.course import Course
 from flask_restful import Resource, Api
 from flask import request, jsonify, current_app, session
 from flask_jwt_extended import (
@@ -27,6 +28,8 @@ from app.api.service.knowledge_space import KnowledgeSpaceAPI, CompareKnowledgeS
 from app.api.service.auth import UserRegistration, UserLogin, UserLogout
 from app.api.service.users import UserAPI, UsersAPI
 from app.api.service.courses import CourseAPI, CoursesListAPI, CourseTestsAPI
+from app.api.service.tests import GetTestAPI, GetTestTakeAPI
+
 
 # if not current_user.is_authenticated:
 #     return current_app.login_manager.unauthorized()
@@ -35,6 +38,32 @@ from app.api.service.courses import CourseAPI, CoursesListAPI, CourseTestsAPI
 # def before_request():
 #     g.user = current_user
 #     print ('current_user: %s, g.user:, leaving bef_req' % (current_user))
+
+class TestAPI(Resource):
+    def get(self, id):
+        test = TestModel.query.get(int(id))
+        questions = test.test_questions
+        for i in range(len(questions)):
+            question_answers = test.test_questions[i].test_question_answers
+            for j in range(len(question_answers)):
+                test.test_questions[i].test_question_answers[j].isCorrect = 0
+
+        return test.json_format(), 200
+
+    def put(self, id):
+        data = request.get_json()
+        students = data['students']
+        for student in students:
+            new_testTake = TestTake(test_id=id, student_id=student['id'], score=0)
+            new_testTake.insert()
+        test = TestModel.query.get(int(id))
+        questions = test.test_questions
+        for i in range(len(questions)):
+            question_answers = test.test_questions[i].test_question_answers
+            for j in range(len(question_answers)):
+                test.test_questions[i].test_question_answers[j].isCorrect = 0
+
+        return test.json_format(), 200
 
 class CreateTest(Resource):
     """
@@ -121,7 +150,27 @@ class TestQuestionsAPI(Resource):
         return test.json_format()['test_questions'], 200
 
 
-class CreateTestTake(Resource):
+class TestTakeAPI(Resource):
+    @jwt_required
+    def get(self):
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+        student = Student.query.filter_by(user_id=user.id).first()
+        ret = []
+        for test_take in student.test_takes:
+            test = TestModel.query.get(test_take.test_id)
+            course = Course.query.get(test.course_id)
+            temp = {
+                "id": test_take.id,
+                "title": test.title,
+                "course": course.title,
+                "max_score": test.max_score,
+                "score": test_take.score,
+                "done": test_take.done,
+            }
+            ret.append(temp)
+        return ret, 200
+
     @jwt_required
     def post(self):
         data = request.get_json()
@@ -131,8 +180,9 @@ class CreateTestTake(Resource):
         # TODO checks
         # TODO calculate score
         test = data['test']
-        test_take = TestTake(student_id=student.id, test_id=data['test_id'], score=0)
-        test_take.insert()
+        # test_take = TestTake(student_id=student.id, test_id=data['test_id'], score=0)
+        # test_take.insert()
+        test_take = TestTake.query.get(data['test_take_id'])
 
         questions = test['test_questions']
 
@@ -144,7 +194,8 @@ class CreateTestTake(Resource):
                                                   test_question_answer_id=answer['id'],
                                                   selected=answer['isCorrect'])
                 test_take_answer.insert()
-
+        test_take.done = True
+        test_take.update()
         return test_take.id, 200
 
 
@@ -286,7 +337,7 @@ api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(UserLogout, '/logout')
 api.add_resource(CreateTest, '/test')
-api.add_resource(CreateTestTake, '/test_take')
+api.add_resource(TestTakeAPI, '/test_take')
 api.add_resource(ProblemAPI, '/problem')
 api.add_resource(EdgeAPI, '/edge')
 api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
@@ -300,6 +351,9 @@ api.add_resource(CourseAPI, "/course/<int:course_id>")
 api.add_resource(CoursesListAPI, "/course")
 api.add_resource(UsersAPI, "/users/<string:role>")
 api.add_resource(CourseTestsAPI, "/course/<int:course_id>/tests")
+api.add_resource(GetTestAPI, "/test/<int:test_id>")
+api.add_resource(GetTestTakeAPI, "/test/<int:test_id>/test_take")
+api.add_resource(TestAPI, "/test/<int:id>")
 
 # def get_current_user():
 #     with current_app.request_context():
@@ -337,26 +391,26 @@ def load_user(userid):
 #         return Identity(current_user.id)
 #     return AnonymousIdentity()
 
-@app.route("/test/<int:id>")
-def getTest(id):
-    test = TestModel.query.get(int(id))
-    questions = test.test_questions
-    for i in range(len(questions)):
-        question_answers = test.test_questions[i].test_question_answers
-        for j in range(len(question_answers)):
-            test.test_questions[i].test_question_answers[j].isCorrect = 0
 
-    return test.json_format(), 200
-
-
-@app.route("/test_take/<int:id>")
-def getTestTake(id):
+@app.route("/test_take/<int:id>/<int:done>")
+def getTestTake(id, done):
     test_take = TestTake.query.get(int(id))
     test = TestModel.query.get(int(test_take.test_id))
-    ret = {
-        "test_take": test_take.json_format(),
-        "test": test.json_format()
-    }
+    if done == 1:
+        ret = {
+            "test_take": test_take.json_format(),
+            "test": test.json_format()
+        }
+    else:
+        questions = test.test_questions
+        for i in range(len(questions)):
+            question_answers = test.test_questions[i].test_question_answers
+            for j in range(len(question_answers)):
+                test.test_questions[i].test_question_answers[j].isCorrect = 0
+        ret = {
+            "test_take": test_take.json_format(),
+            "test": test.json_format()
+        }
     return ret, 200
 
 

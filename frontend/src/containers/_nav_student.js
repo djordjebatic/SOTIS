@@ -5,7 +5,7 @@ const nav = [
   {
     _tag: 'CSidebarNavItem',
     name: 'Tests',
-    to: '/tests',
+    to: '/student/tests',
     icon: <CIcon name="cil-pencil" customClasses="c-sidebar-nav-icon"/>
   },
   {

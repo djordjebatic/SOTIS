@@ -48,7 +48,7 @@ class KnowledgeSpace extends RoleAwareComponent {
     let arr = [];
     arr.push(localStorage.getItem("role"));
     this.userRoles = arr;
-    this.allowedRoles = ["ROLE_PROFESSOR"];
+    this.allowedRoles = ["ROLE_PROFESSOR", "ROLE_STUDENT"];
 
     this.getKnowledgeSpaces = this.getKnowledgeSpaces.bind(this);
     this.addKnowledgeSpace = this.addKnowledgeSpace.bind(this);
