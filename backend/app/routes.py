@@ -233,6 +233,23 @@ class ProblemAPI(Resource):
     def get(self):
         return [problem.json_format() for problem in Problem.query.all()], 200
 
+    def delete(self, problem_id):
+        problem = Problem.query.filter(Problem.id == problem_id).first()
+        if problem:
+            # first delete connected edges
+            upper = Edge.query.filter(Edge.higher_id == problem_id).first()
+            if upper:
+                upper.delete()
+
+            lowers = Edge.query.filter(Edge.lower_id == problem_id).all()
+            for lower in lowers:
+                lower.delete()
+
+            problem.delete()
+            return [problem.json_format() for problem in Problem.query.all()], 200
+        else:
+            return {'error': 'Problem with id {} does\'t exist'.format(problem_id)}, 409
+
 
 class EdgeAPI(Resource):
     def post(self):
@@ -293,6 +310,19 @@ class EdgeAPI(Resource):
     def get(self):
         return [edge.json_format() for edge in Edge.query.all()], 200
 
+    def delete(self, edge_id):
+        edge = Edge.query.filter(Edge.id == edge_id).first()
+        if edge:
+            lower_node = edge.lower_node
+            if lower_node.root:
+                lower_node.root = False
+                lower_node.update()
+            edge.delete()
+
+            return [edge.json_format() for edge in Edge.query.all()], 200
+        else:
+            return {'error': 'Edge with id {} does\'t exist'.format(edge_id)}, 409
+
 
 class KnowledgeSpaceAPI(Resource):
     def post(self):
@@ -329,7 +359,8 @@ class KnowledgeSpaceAPI(Resource):
             p.insert()
         knowledge_space = KnowledgeSpace.query.get(int(id))
         return knowledge_space.json_format(), 200
-      
+
+
 class UserAPI(Resource):
     def get(self):
         # get the auth token
@@ -366,6 +397,7 @@ class UserAPI(Resource):
                 'message': 'Provide a valid auth token.'
             }
             return responseObject, 401
+
 
 class FormatTestsAPI(Resource):
     def post(self):
@@ -421,8 +453,8 @@ api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(CreateTest, '/test')
 api.add_resource(CreateTestTake, '/test_take')
-api.add_resource(ProblemAPI, '/problem')
-api.add_resource(EdgeAPI, '/edge')
+api.add_resource(ProblemAPI, '/problem', '/problem/<problem_id>')
+api.add_resource(EdgeAPI, '/edge', '/edge/<edge_id>')
 api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
 api.add_resource(UserAPI, '/user')
 api.add_resource(TestQuestionsAPI, '/testquestions/<test_id>')
