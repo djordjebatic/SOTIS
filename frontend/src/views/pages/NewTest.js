@@ -65,7 +65,8 @@ class TestsPage extends RoleAwareComponent {
         let test = {
             title: this.state.testTitle,
             max_score: this.state.maxScore,
-            questions: this.state.questions
+            questions: this.state.questions,
+            course_id: this.props.course_id
         }
         axios({
             method: 'post',
@@ -73,14 +74,14 @@ class TestsPage extends RoleAwareComponent {
             headers: { "Authorization": AuthStr } ,   
             data: test
         }).then((response) => {
-            this.props.history.push('/tests')
+            this.props.testsPageCallback(true);
         }, (error) => {
             console.log(error);
         });
     }
 
     cancel() {
-        this.props.history.push('/tests')
+        this.props.testsPageCallback(true);
     }
 
     addQuestion() {

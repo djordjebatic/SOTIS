@@ -96,7 +96,8 @@ class Register extends Component {
         email: this.state.email,
         name: this.state.firstName,
         last_name: this.state.lastName,
-        student_id: this.state.studentId
+        student_id: this.state.studentId,
+        role: 'student'
       }
       ).then((resp) => {
         NotificationManager.success('Registered successfuly. Please log in', 'Success!', 4000);

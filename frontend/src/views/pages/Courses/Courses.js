@@ -1,9 +1,6 @@
 import React, { Component } from "react";
 import axios from "axios";
 
-import PropTypes from "prop-types";
-import { withRouter } from "react-router";
-
 import {
   CCol,
   CButton,
@@ -18,7 +15,6 @@ import {
   CFormText,
   CRow,
   CWidgetBrand,
-  CSelect,
 } from "@coreui/react";
 
 import { RoleAwareComponent } from "react-router-role-authorization";
@@ -27,50 +23,55 @@ import { Redirect } from "react-router-dom";
 const url =
   process.env.REACT_APP_DOMAIN + ":" + process.env.REACT_APP_PORT + "/";
 
-class KnowledgeSpace extends RoleAwareComponent {
-    static propTypes = {
-    match: PropTypes.object.isRequired,
-    location: PropTypes.object.isRequired,
-    history: PropTypes.object.isRequired
-  };
+class Courses extends RoleAwareComponent {
   constructor(props) {
     super(props);
     this.state = {
-      knowledgeSpaces: [],
+      courses: [
+        {
+          title: "Predmet 1",
+          tests: [],
+          professors: [],
+          students: [],
+        },
+      ],
       showModal: false,
       title: "",
       errorTitle: "",
       buttonDisabled: true,
-      tests: [],
-      test_id: 0,
     };
 
     let arr = [];
     arr.push(localStorage.getItem("role"));
     this.userRoles = arr;
-    this.allowedRoles = ["ROLE_PROFESSOR"];
+    this.allowedRoles = ["ROLE_PROFESSOR", "ROLE_STUDENT", "ROLE_ADMIN"];
 
-    this.getKnowledgeSpaces = this.getKnowledgeSpaces.bind(this);
-    this.addKnowledgeSpace = this.addKnowledgeSpace.bind(this);
+    this.getCourses = this.getCourses.bind(this);
+    this.addCourse = this.addCourse.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.validateTitle = this.validateTitle.bind(this);
     this.resetAll = this.resetAll.bind(this);
-    this.getTests = this.getTests.bind(this);
-    this.handleDropDown = this.handleDropDown.bind(this);
+    this.getRightFooter = this.getRightFooter.bind(this);
+    this.getRightHeader = this.getRightHeader.bind(this);
+    this.getLeftFooter = this.getLeftFooter.bind(this);
+    this.getLeftHeadLr = this.getLeftHeader.bind(this);
   }
 
   componentDidMount() {
-    this.getKnowledgeSpaces();
+    this.getCourses();
   }
 
-  getKnowledgeSpaces() {
+  getCourses() {
+    let token = localStorage.getItem("loggedInUser")
+    let AuthStr = 'Bearer '.concat(token); 
     axios({
       method: "get",
-      url: url + "knowledge_space",
+      url: url + "course",
+      headers: { "Authorization": AuthStr } ,
     }).then(
       (response) => {
         console.log(response);
-        this.setState({ knowledgeSpaces: response.data });
+        this.setState({ courses: response.data });
       },
       (error) => {
         console.log(error);
@@ -78,41 +79,22 @@ class KnowledgeSpace extends RoleAwareComponent {
     );
   }
 
-  getTests() {
-    this.setState({ showModal: true });
-    axios({
-      method: "get",
-      url: url + "course/" + this.props.course_id + "/tests",
-    }).then(
-      (response) => {
-        console.log(response);
-        this.setState({ tests: response.data });
-        if (response.data.length > 0) {
-          this.setState({ test_id: response.data[0].id });
-        }
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
-  }
-
-  addKnowledgeSpace() {
+  addCourse() {
+    let token = localStorage.getItem("loggedInUser")
+    let AuthStr = 'Bearer '.concat(token); 
     let data = {
       title: this.state.title,
-      test_id: this.state.test_id,
-      course_id: this.props.course_id,
     };
     axios({
       method: "post",
-      url: url + "knowledge_space",
-      //headers: { "Authorization": AuthStr } ,
+      url: url + "course",
+      headers: { "Authorization": AuthStr } ,
       data: data,
     }).then(
       (response) => {
-        let temp = this.state.knowledgeSpaces;
+        let temp = this.state.courses;
         temp.push(response.data);
-        this.setState({ knowledgeSpaces: temp });
+        this.setState({ courses: temp });
         this.resetAll();
       },
       (error) => {
@@ -149,10 +131,6 @@ class KnowledgeSpace extends RoleAwareComponent {
     }
   }
 
-  handleDropDown(e){
-  this.setState({test_id: e.target.value})
-}
-
   getColor(index) {
     let n = index % 7;
     switch (n) {
@@ -173,36 +151,87 @@ class KnowledgeSpace extends RoleAwareComponent {
     }
   }
 
+  getLeftHeader(course, role) {
+    switch (role) {
+      case "ROLE_ADMIN":
+        return course.professors.length;
+      case "ROLE_PROFESSOR":
+        return course.tests.length;
+      case "ROLE_STUDENT":
+        return course.professors.length;
+      default:
+        return "";
+    }
+  }
+  getLeftFooter(role) {
+    switch (role) {
+      case "ROLE_ADMIN":
+        return "professors";
+      case "ROLE_PROFESSOR":
+        return "tests";
+      case "ROLE_STUDENT":
+        return "professors";
+      default:
+        return "";
+    }
+  }
+
+  getRightHeader(course, role) {
+    switch (role) {
+      case "ROLE_ADMIN":
+        return course.students.length;
+      case "ROLE_PROFESSOR":
+        return course.students.length;
+      case "ROLE_STUDENT":
+        return course.tests.length;
+      default:
+        return "";
+    }
+  }
+  getRightFooter(role) {
+    switch (role) {
+      case "ROLE_ADMIN":
+        return "students";
+      case "ROLE_PROFESSOR":
+        return "students";
+      case "ROLE_STUDENT":
+        return "tests";
+      default:
+        return "";
+    }
+  }
+
   render() {
-    const { match, location, history } = this.props;
+    const role = localStorage.getItem("role");
     let ret = (
       <div>
         <CCol col="6" sm="4" md="2" xl className="mb-3 mb-xl-0">
           <CButton
+            hidden={role !== "ROLE_ADMIN"}
             style={{ marginBottom: "20px" }}
             id="confirmButton"
-            onClick={() => this.getTests()}
+            onClick={() => this.setState({ showModal: true })}
             color="success"
             className="px-4"
           >
-            New Knowledge Space
+            Create new course
           </CButton>
         </CCol>
         <CRow>
-          {this.state.knowledgeSpaces.map((ks, index) => (
-            <CCol xs="12" sm="6" lg="3" hidden={ks.isReal}>
+          {this.state.courses.map((course, index) => (
+            <CCol xs="12" sm="6" lg="3">
               <CWidgetBrand
                 onClick={(event) =>
-                  history.push("/knowledgeSpace/" + ks.id)
+                  this.props.history.push("/courses/" + course.id)
                 }
                 color={this.getColor(index)}
-                rightHeader={ks.problems.length}
-                rightFooter={"nodes"}
-                leftHeader={ks.edges.length}
-                leftFooter="edges"
+                rightHeader={this.getRightHeader(course, role)}
+                rightFooter={this.getRightFooter(role)}
+                leftHeader={this.getLeftHeader(course, role)}
+                leftFooter={this.getLeftFooter(role)}
               >
                 <h1 height="56px" className="my-4">
-                  {ks.title}
+                  {course.title}
                 </h1>
               </CWidgetBrand>
             </CCol>
@@ -211,15 +240,15 @@ class KnowledgeSpace extends RoleAwareComponent {
 
         <CModal show={this.state.showModal} onClose={() => this.resetAll()}>
           <CModalHeader closeButton>
-            <CModalTitle>Add Knowledge Space</CModalTitle>
+            <CModalTitle>Create new course</CModalTitle>
           </CModalHeader>
           <CModalBody>
             <CFormGroup>
-              <CLabel htmlFor="problemTitle">Knowledge Space Title</CLabel>
+              <CLabel htmlFor="courseTitle">Course Title</CLabel>
               <CInput
                 type="text"
-                id="ksTitle"
-                name="ksTitle"
+                id="courseTitle"
+                name="courseTitle"
                 onChange={this.handleChange}
                 value={this.state.title}
                 placeholder="Title"
@@ -228,27 +257,12 @@ class KnowledgeSpace extends RoleAwareComponent {
                 <p style={{ color: "red" }}>{this.state.errorTitle}</p>
               </CFormText>
             </CFormGroup>
-            <CFormGroup row>
-              <CCol md="12">
-                <CLabel htmlFor="select">Test</CLabel>
-              </CCol>
-              <CCol xs="12" md="12">
-                <CSelect custom name="select" id="select"
-                  value={this.state.test_id}
-                  onChange={this.handleDropDown}
-                >
-                {this.state.tests.map((test) => (
-                    <option value={test.id}>{test.title}</option>
-                  ))}
-                </CSelect>
-              </CCol>
-            </CFormGroup>
           </CModalBody>
           <CModalFooter>
             <CButton
               disabled={this.state.buttonDisabled}
               color="success"
-              onClick={() => this.addKnowledgeSpace()}
+              onClick={() => this.addCourse()}
             >
               Add
             </CButton>{" "}
@@ -262,5 +276,5 @@ class KnowledgeSpace extends RoleAwareComponent {
     return this.rolesMatched() ? ret : <Redirect to="/courses" />;
   }
 }
-const KnowledgeSpaceWithRouter = withRouter(KnowledgeSpace);
-export default KnowledgeSpaceWithRouter;
+
+export default Courses;

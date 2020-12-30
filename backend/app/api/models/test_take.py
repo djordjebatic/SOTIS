@@ -9,11 +9,13 @@ class TestTake(db.Model):
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     test_take_answers = db.relationship('TestTakeAnswer', backref='test_take', lazy='subquery')
+    done = db.Column(db.Integer, nullable=False)
 
     def __init__(self, student_id, test_id, score):
         self.student_id = student_id
         self.test_id = test_id
         self.score = score
+        self.done = False
 
     def insert(self):
         db.session.add(self)
@@ -32,5 +34,6 @@ class TestTake(db.Model):
             "student_id": self.student_id,
             "test_id": self.test_id,
             "score": self.score,
-            "test_take_answers": [test_take_answer.json_format() for test_take_answer in self.test_take_answers]
+            "test_take_answers": [test_take_answer.json_format() for test_take_answer in self.test_take_answers],
+            "done": self.done
         }

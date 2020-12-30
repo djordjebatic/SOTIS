@@ -161,7 +161,7 @@ class TakeTest extends RoleAwareComponent {
         </CCol>
       </div>
     );
-    return this.rolesMatched() ? ret : <Redirect to="/tests" />;
+    return this.rolesMatched() ? ret : <Redirect to="/courses" />;
   }
 }
 

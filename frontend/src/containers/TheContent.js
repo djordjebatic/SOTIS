@@ -35,7 +35,7 @@ const TheContent = () => {
                   )} />
               )
             })}
-            <Redirect from="/" to="/tests" />
+            <Redirect from="/" to="/courses" />
           </Switch>
         </Suspense>
       </CContainer>

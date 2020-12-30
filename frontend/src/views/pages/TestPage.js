@@ -133,7 +133,7 @@ class TestPage extends RoleAwareComponent {
 
       </div>
     );
-    return this.rolesMatched() ? ret : <Redirect to="/tests" />;
+    return this.rolesMatched() ? ret : <Redirect to="/courses" />;
   }
 }
 

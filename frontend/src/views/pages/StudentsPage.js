@@ -44,11 +44,11 @@ class StudentsPage extends RoleAwareComponent {
     let AuthStr = 'Bearer '.concat(token);     
     axios({
       method: 'get',
-      url: url + 'student',       
+      url: url + 'users/student',       
       headers: { "Authorization": AuthStr } ,   
   }).then((response) => {
       console.log(response);
-      this.setState({students:response.data.students})
+      this.setState({students:response.data})
   }, (error) => {
       console.log(error);
   });
@@ -94,7 +94,7 @@ class StudentsPage extends RoleAwareComponent {
           </CCard>
         </CCol>
     );
-    return this.rolesMatched() ? ret : <Redirect to="/tests" />;
+    return this.rolesMatched() ? ret : <Redirect to="/courses" />;
   }
 }
 
