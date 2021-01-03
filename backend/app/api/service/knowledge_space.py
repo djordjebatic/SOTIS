@@ -55,7 +55,7 @@ def is_correct(correct_answers, student_answers):
 
 
 def create_graph(test, implications):
-    ks_expected = KnowledgeSpace.query.filter_by(test_id=test.id, isReal=False).first()
+    ks_expected = KnowledgeSpace.query.filter_by(test_id=test.id, is_real=False).first()
     title = ks_expected.title + ' - Real Knowledge Space'
     ks = KnowledgeSpace.query.filter_by(title=title).first()
     if ks is not None:
@@ -64,7 +64,7 @@ def create_graph(test, implications):
         for problem in ks.problems:
             problem.delete()
         ks.delete()
-    ks = KnowledgeSpace(ks_expected.title + ' - Real Knowledge Space', test.id, True)
+    ks = KnowledgeSpace(ks_expected.title + ' - Real Knowledge Space', test.id, True, course_id=ks_expected.course_id)
     ks.insert()
 
     questions = test.test_questions
@@ -141,7 +141,7 @@ def bfs(curr, lower_node):
 class CompareKnowledgeSpace(Resource):
     def get(self, ks_id):
         knowledge_space = KnowledgeSpace.query.get(int(ks_id))
-        real = KnowledgeSpace.query.filter_by(test_id=knowledge_space.test_id, isReal=True).first()
+        real = KnowledgeSpace.query.filter_by(test_id=knowledge_space.test_id, is_real=True).first()
         real_edges = real.edges
         expected_edges = knowledge_space.edges.copy()
 

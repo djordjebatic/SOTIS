@@ -82,7 +82,7 @@ class TestsPage extends RoleAwareComponent {
   getTests() {
     axios({
       method: "get",
-      url: url + "test",
+      url: url + "course/" + this.props.course_id + "/tests",
     }).then(
       (response) => {
         console.log(response);
@@ -172,13 +172,6 @@ class TestsPage extends RoleAwareComponent {
                               >
                                 <CCardHeader>
                                   {indexQ + 1}. {question.title}
-                                  <CBadge
-                                    shape="pill"
-                                    color="primary"
-                                    className="float-right"
-                                  >
-                                    {question.points}
-                                  </CBadge>
                                 </CCardHeader>
                                 <CCardBody style={{ padding: "3px" }}>
                                   {question.test_question_answers.map(
