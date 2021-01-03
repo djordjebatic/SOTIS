@@ -47,7 +47,7 @@ class TestsPage extends RoleAwareComponent {
         let arr = [];
         arr.push(localStorage.getItem('role'));
         this.userRoles = arr;
-        this.allowedRoles = ['ROLE_PROFESSOR', 'ROLE_STUDENT'];
+        this.allowedRoles = ['ROLE_PROFESSOR', 'ROLE_STUDENT', 'ROLE_ADMIN'];
 
 
         this.createTest = this.createTest.bind(this)

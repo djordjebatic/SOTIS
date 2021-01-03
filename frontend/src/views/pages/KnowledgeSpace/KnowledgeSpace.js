@@ -48,7 +48,7 @@ class KnowledgeSpace extends RoleAwareComponent {
     let arr = [];
     arr.push(localStorage.getItem("role"));
     this.userRoles = arr;
-    this.allowedRoles = ["ROLE_PROFESSOR", "ROLE_STUDENT"];
+    this.allowedRoles = ["ROLE_PROFESSOR", "ROLE_STUDENT", "ROLE_ADMIN"];
 
     this.getKnowledgeSpaces = this.getKnowledgeSpaces.bind(this);
     this.addKnowledgeSpace = this.addKnowledgeSpace.bind(this);
@@ -66,7 +66,7 @@ class KnowledgeSpace extends RoleAwareComponent {
   getKnowledgeSpaces() {
     axios({
       method: "get",
-      url: url + "knowledge_space",
+      url: url + "course/" + this.props.course_id + "/knowledge_spaces",
     }).then(
       (response) => {
         console.log(response);
@@ -237,9 +237,13 @@ class KnowledgeSpace extends RoleAwareComponent {
                   value={this.state.test_id}
                   onChange={this.handleDropDown}
                 >
-                {this.state.tests.map((test) => (
-                    <option value={test.id}>{test.title}</option>
-                  ))}
+                {
+                    this.state.tests.map(function (item) {
+                        if (item.knowledge_space_id === '') {
+                            return <option value={item.id}>{item.title}</option>;
+                        }
+                    })
+                }
                 </CSelect>
               </CCol>
             </CFormGroup>

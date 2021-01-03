@@ -27,7 +27,7 @@ from app.api.service.knowledge_space import KnowledgeSpaceAPI, CompareKnowledgeS
     GetKnowledgeSpace
 from app.api.service.auth import UserRegistration, UserLogin, UserLogout
 from app.api.service.users import UserAPI, UsersAPI
-from app.api.service.courses import CourseAPI, CoursesListAPI, CourseTestsAPI
+from app.api.service.courses import CourseAPI, CoursesListAPI, CourseTestsAPI, CourseStudentsAPI, CourseKSAPI
 from app.api.service.tests import GetTestAPI, GetTestTakeAPI
 
 
@@ -351,6 +351,8 @@ api.add_resource(CourseAPI, "/course/<int:course_id>")
 api.add_resource(CoursesListAPI, "/course")
 api.add_resource(UsersAPI, "/users/<string:role>")
 api.add_resource(CourseTestsAPI, "/course/<int:course_id>/tests")
+api.add_resource(CourseKSAPI, "/course/<int:course_id>/knowledge_spaces")
+api.add_resource(CourseStudentsAPI, "/course/<int:course_id>/<string:role>")
 api.add_resource(GetTestAPI, "/test/<int:test_id>")
 api.add_resource(GetTestTakeAPI, "/test/<int:test_id>/test_take")
 api.add_resource(TestAPI, "/test/<int:id>")

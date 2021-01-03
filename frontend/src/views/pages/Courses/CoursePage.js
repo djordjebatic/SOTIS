@@ -304,6 +304,7 @@ class CoursePage extends RoleAwareComponent {
     const role = localStorage.getItem("role");
     const professors = this.state.course.professors;
     const students = this.state.course.students;
+    const { id } = this.props.match.params;
     let ret = (
       <CCol xs="12" lg="12">
         <CModal
@@ -594,11 +595,11 @@ class CoursePage extends RoleAwareComponent {
             </CTabPane>
             <CTabPane data-tab="tests">
               <br/>
-              <TestsPage course_id ={this.state.course.id} />
+              <TestsPage course_id={id} />
             </CTabPane>
             <CTabPane data-tab="knowledge_spaces">
             <br/>
-              <KnowledgeSpace course_id={this.state.course.id}/>
+              <KnowledgeSpace course_id={id}/>
             </CTabPane>
           </CTabContent>
         </CTabs>

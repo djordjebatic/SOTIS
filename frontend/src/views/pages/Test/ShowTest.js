@@ -88,7 +88,7 @@ class ShowTest extends RoleAwareComponent {
     let AuthStr = "Bearer ".concat(token);
     axios({
       method: "get",
-      url: url + "users/student",
+      url: url + "course/" + this.state.test.course_id + "/student",
       headers: { Authorization: AuthStr },
     }).then(
       (response) => {

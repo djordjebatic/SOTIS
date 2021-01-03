@@ -80,6 +80,22 @@ class CourseTestsAPI(Resource):
         tests = course.tests
         ret = []
         for test in tests:
-            if len(test.knowledge_spaces) == 0:
+            if True:
                 ret.append(test.json_format())
         return ret, 200
+
+
+class CourseStudentsAPI(Resource):
+    def get(self, course_id, role):
+        course = Course.query.get(course_id)
+        if role == 'student':
+            return [student.json_format() for student in course.students], 200
+        if role == 'professor':
+            return [professor.json_format() for professor in course.professors], 200
+        return "Not found", 404
+
+
+class CourseKSAPI(Resource):
+    def get(self, course_id):
+        course = Course.query.get(course_id)
+        return [ks.json_format() for ks in course.knowledge_spaces], 200
