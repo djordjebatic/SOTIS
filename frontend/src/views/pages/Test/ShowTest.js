@@ -1,23 +1,16 @@
-import React, { Component } from 'react';
-import axios from 'axios';
+import React from "react";
+import axios from "axios";
 
 import {
   CRow,
   CCard,
   CCardBody,
   CCardHeader,
-  CCardFooter,
   CLabel,
   CInput,
   CButton,
-  CCollapse,
-  CContainer,
   CCol,
   CDataTable,
-  CFade,
-  CLink,
-  CFormGroup,
-  CInputCheckbox,
   CTabs,
   CNav,
   CNavItem,
@@ -29,18 +22,19 @@ import {
   CModalBody,
   CModalTitle,
   CModalHeader,
-  CModalFooter
-} from '@coreui/react'
-import CIcon from '@coreui/icons-react'
+  CModalFooter,
+} from "@coreui/react";
+import CIcon from "@coreui/icons-react";
 
-import { RoleAwareComponent } from 'react-router-role-authorization'
-import {Redirect} from 'react-router-dom'
+import { RoleAwareComponent } from "react-router-role-authorization";
+import { Redirect } from "react-router-dom";
 
-const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
+const url =
+  process.env.REACT_APP_DOMAIN + ":" + process.env.REACT_APP_PORT + "/";
 
-const fields = ['#','name', 'lastname', 'email']
-const fields2 = ["#", "name", "last_name", "email", "score", "details"];
-const role = localStorage.getItem("role")
+const fields = ["#", "name", "lastname", "email"];
+const fields2 = ["#", "name", "last_name", "email", "score", "results"];
+const role = localStorage.getItem("role");
 const fieldsAdd = ["#", "name", "last_name", "add"];
 const fieldsRemove = ["#", "name", "last_name", "remove"];
 
@@ -50,40 +44,40 @@ class ShowTest extends RoleAwareComponent {
     this.state = {
       test: {
         title: "",
-        test_questions: [{
-            title:"",
-            test_question_answers:[]
-        }]
-    },
-        test_takes:[],
-        showModal: false,
-        studentsTable: [],
-        searchStudents: "",
-        students: [],
-        studentsToAdd: [],
+        test_questions: [
+          {
+            title: "",
+            test_question_answers: [],
+          },
+        ],
+      },
+      test_takes: [],
+      showModal: false,
+      studentsTable: [],
+      searchStudents: "",
+      students: [],
+      studentsToAdd: [],
     };
 
     let arr = [];
-    arr.push(localStorage.getItem('role'));
+    arr.push(localStorage.getItem("role"));
     this.userRoles = arr;
-    this.allowedRoles = ['ROLE_PROFESSOR', 'ROLE_STUDENT'];
+    this.allowedRoles = ["ROLE_PROFESSOR", "ROLE_STUDENT"];
 
-
-    this.getTest = this.getTest.bind(this)
-    this.getTestTake = this.getTestTake.bind(this)
-    this.handleStudentsSearch = this.handleStudentsSearch.bind(this)
-    this.addStudentToList = this.addStudentToList.bind(this)
-    this.removeStudentFromList = this.removeStudentFromList.bind(this)
+    this.getTest = this.getTest.bind(this);
+    this.getTestTake = this.getTestTake.bind(this);
+    this.handleStudentsSearch = this.handleStudentsSearch.bind(this);
+    this.addStudentToList = this.addStudentToList.bind(this);
+    this.removeStudentFromList = this.removeStudentFromList.bind(this);
     this.resetAll = this.resetAll.bind(this);
     this.addStudents = this.addStudents.bind(this);
   }
 
   componentDidMount() {
-    this.getTest()
-    this.getTestTake()
+    this.getTest();
   }
 
-    getStudents(test_takes) {
+  getStudents(test_takes) {
     let token = localStorage.getItem("loggedInUser");
     let AuthStr = "Bearer ".concat(token);
     axios({
@@ -93,14 +87,13 @@ class ShowTest extends RoleAwareComponent {
     }).then(
       (response) => {
         console.log(response);
-        let assigned = []
-        var tt
-        var i
-        
-        for (i in test_takes){ 
-            tt = test_takes[i]
-            if (!tt.done)
-            assigned.push(tt.student)
+        let assigned = [];
+        var tt;
+        var i;
+
+        for (i in test_takes) {
+          tt = test_takes[i];
+          if (!tt.done) assigned.push(tt.student);
         }
         var newArray = response.data.filter(function (student) {
           return !assigned.some((p) => p.id === student.id);
@@ -113,62 +106,71 @@ class ShowTest extends RoleAwareComponent {
     );
   }
 
-
-  getTest(){
+  getTest() {
     const { id } = this.props.match.params;
     axios({
-      method: 'get',
-      url: url + 'test/' + id,
-    }).then((response) => {
-      this.setState({ test: response.data})
-    }, (error) => {
-      console.log(error);
-    });
+      method: "get",
+      url: url + "test/" + id,
+    }).then(
+      (response) => {
+        this.setState({ test: response.data });
+        this.getTestTake();
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
   }
 
-  getTestTake(){
+  getTestTake() {
     const { id } = this.props.match.params;
     axios({
-      method: 'get',
-      url: url + 'test/' + id + '/test_take',
-    }).then((response) => {
-      this.setState({ test_takes: response.data})
-      this.getStudents(response.data)
-    }, (error) => {
-      console.log(error);
-    });
+      method: "get",
+      url: url + "test/" + id + "/test_take",
+    }).then(
+      (response) => {
+        this.setState({ test_takes: response.data });
+        this.getStudents(response.data);
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
   }
 
   resetAll() {
-let assigned = []
-        var tt
-        var i
-        let test_takes = this.state.test_takes
-        for (i in test_takes){ 
-            tt = test_takes[i]
-            if (!tt.done)
-            assigned.push(tt.student)
-        }
+    let assigned = [];
+    var tt;
+    var i;
+    let test_takes = this.state.test_takes;
+    for (i in test_takes) {
+      tt = test_takes[i];
+      if (!tt.done) assigned.push(tt.student);
+    }
     let students = this.state.students;
 
     var newArray = students.filter(function (student) {
       return !assigned.some((u) => u.id === student.id);
     });
-    this.setState({showModal: false, studentsToAdd:[], searchStudents: "", studentsTable: newArray})
+    this.setState({
+      showModal: false,
+      studentsToAdd: [],
+      searchStudents: "",
+      studentsTable: newArray,
+    });
   }
 
-    handleStudentsSearch(e) {
+  handleStudentsSearch(e) {
     let search = e.target.value;
-let assigned = []
-        var tt
-        var i
-                let test_takes = this.state.test_takes
-        for (i in test_takes){ 
-            tt = test_takes[i]
-            if (!tt.done)
-            assigned.push(tt.student)
-        }
-           let selected = this.state.studentsToAdd;
+    let assigned = [];
+    var tt;
+    var i;
+    let test_takes = this.state.test_takes;
+    for (i in test_takes) {
+      tt = test_takes[i];
+      if (!tt.done) assigned.push(tt.student);
+    }
+    let selected = this.state.studentsToAdd;
     let users = this.state.students;
     var temp = users.filter(function (user) {
       return !(
@@ -182,21 +184,20 @@ let assigned = []
         u.user.last_name.toLowerCase().includes(search.toLowerCase())
       );
     });
-    this.setState({searchStudents: search, studentsTable: newArray})
+    this.setState({ searchStudents: search, studentsTable: newArray });
   }
 
-    addStudentToList(user) {
+  addStudentToList(user) {
     let search = this.state.searchStudents;
-    let assigned = []
-        var tt
-        var i
-        let test_takes = this.state.test_takes
-        for (i in test_takes){ 
-            tt = test_takes[i]
-            if (!tt.done)
-            assigned.push(tt.student)
-        } 
-        let list_to_add = this.state.studentsToAdd;
+    let assigned = [];
+    var tt;
+    var i;
+    let test_takes = this.state.test_takes;
+    for (i in test_takes) {
+      tt = test_takes[i];
+      if (!tt.done) assigned.push(tt.student);
+    }
+    let list_to_add = this.state.studentsToAdd;
     list_to_add.push(user);
     let users = this.state.students;
     var temp2 = users.filter(function (user) {
@@ -211,7 +212,7 @@ let assigned = []
         u.user.last_name.toLowerCase().includes(search.toLowerCase())
       );
     });
-    this.setState({studentsToAdd: list_to_add, studentsTable: newArray})
+    this.setState({ studentsToAdd: list_to_add, studentsTable: newArray });
   }
 
   removeStudentFromList(user) {
@@ -221,16 +222,15 @@ let assigned = []
     });
 
     let search = this.state.searchStudents;
-let assigned = []
-        var tt
-        var i
-                let test_takes = this.state.test_takes
+    let assigned = [];
+    var tt;
+    var i;
+    let test_takes = this.state.test_takes;
 
-        for (i in test_takes){ 
-            tt = test_takes[i]
-            if (!tt.done)
-            assigned.push(tt.student)
-        }
+    for (i in test_takes) {
+      tt = test_takes[i];
+      if (!tt.done) assigned.push(tt.student);
+    }
     let users = this.state.students;
     var temp2 = users.filter(function (u) {
       return !(
@@ -244,10 +244,10 @@ let assigned = []
         u.user.last_name.toLowerCase().includes(search.toLowerCase())
       );
     });
-    this.setState({studentsToAdd: afterFilter, studentsTable: newArray})
+    this.setState({ studentsToAdd: afterFilter, studentsTable: newArray });
   }
 
-addStudents() {
+  addStudents() {
     const { id } = this.props.match.params;
     let token = localStorage.getItem("loggedInUser");
     let AuthStr = "Bearer ".concat(token);
@@ -264,7 +264,7 @@ addStudents() {
       (response) => {
         this.resetAll();
         this.resetAll();
-        this.getTestTake()
+        this.getTestTake();
       },
       (error) => {
         console.log(error);
@@ -273,119 +273,143 @@ addStudents() {
   }
 
   render() {
-    const test = this.state.test
-    const test_takes = this.state.test_takes
-    let ret =  (
-      <div >
+    const test = this.state.test;
+    const test_takes = this.state.test_takes;
+    let ret = (
+      <div>
         <CCardHeader>
-            <h2>{test.title}</h2>
-            <h4>Max score: {test.max_score}</h4>
+          <h2>{test.title}</h2>
+          <h4>Max score: {test.max_score}</h4>
         </CCardHeader>
-        <CCardBody style={{backgroundColor: "white"}}>
-                <CTabs activeTab="questions">
-          <br/>
-          <CNav variant="tabs">
-            <CNavItem>
-              <CNavLink data-tab="questions">Questions</CNavLink>
-            </CNavItem>
-            <CNavItem>
-              <CNavLink data-tab="assigned">Assigned</CNavLink>
-            </CNavItem>
-            <CNavItem>
-              <CNavLink data-tab="results">Results</CNavLink>
-            </CNavItem>
-          </CNav>
-          <CTabContent >
-            <CTabPane data-tab="questions">
-            <br/>
-            <CRow>
-                {(test.test_questions).map((question, indexQ) =>
+        <CCardBody style={{ backgroundColor: "white" }}>
+          <CTabs activeTab="questions">
+            <br />
+            <CNav variant="tabs">
+              <CNavItem>
+                <CNavLink data-tab="questions">Questions</CNavLink>
+              </CNavItem>
+              <CNavItem>
+                <CNavLink data-tab="assigned">Assigned</CNavLink>
+              </CNavItem>
+              <CNavItem>
+                <CNavLink data-tab="results">Results</CNavLink>
+              </CNavItem>
+            </CNav>
+            <CTabContent>
+              <CTabPane data-tab="questions">
+                <br />
+                <CRow>
+                  {test.test_questions.map((question, indexQ) => (
                     <CCol xs="4" sm="4" md="4" lg="3">
-                        <CCard style={{margin: "10px" }}>
-                            <CCardHeader style={{ padding: "3px" }}>
-                                <h3>{indexQ + 1}. {question.title}
-                                    <small className="card-header-actions">
-                                        <CBadge shape="pill" color="primary" className="float-right">{question.points}</CBadge>
-                                    </small>
-                                </h3>
-                            </CCardHeader>
-                            <CCardBody>
-                                {(question.test_question_answers).map((answer, indexA) =>
-                                    <div style={{backgroundColor:"whitesmoke", margin: "5px" }}>
-                                        <CRow hidden={!answer.isCorrect}>
-                                        <CCol lg="10" md="10">
-                                            <CLabel style={{ marginRight: "10px" }}>{indexA + 1}. {answer.title} </CLabel>
-                                        </CCol>
-                                        <CCol lg="2" md="2">
-                                            <CIcon className="text-success" name="cil-check-circle"></CIcon>
-                                            </CCol>
-                                        </CRow>
-                                        <CRow hidden={answer.isCorrect} >
-                                            <CCol lg="10" md="10">
-                                            <CLabel frameBorder style={{ marginRight: "10px" }}>{indexA + 1}. {answer.title} </CLabel>
-                                            </CCol>
-                                            <CCol lg="2" md="2">
-                                            <CIcon className="text-danger" name="cil-x-circle"></CIcon>
-                                            </CCol>
-                                        </CRow>
-                                    </div>
-                                )}
-                            </CCardBody>
-                        </CCard>
+                      <CCard style={{ margin: "10px" }}>
+                        <CCardHeader style={{ padding: "3px" }}>
+                          <h3>
+                            {indexQ + 1}. {question.title}
+                            <small className="card-header-actions">
+                              <CBadge
+                                shape="pill"
+                                color="primary"
+                                className="float-right"
+                              >
+                                {question.points}
+                              </CBadge>
+                            </small>
+                          </h3>
+                        </CCardHeader>
+                        <CCardBody>
+                          {question.test_question_answers.map(
+                            (answer, indexA) => (
+                              <div
+                                style={{
+                                  backgroundColor: "whitesmoke",
+                                  margin: "5px",
+                                }}
+                              >
+                                <CRow hidden={!answer.isCorrect}>
+                                  <CCol lg="10" md="10">
+                                    <CLabel style={{ marginRight: "10px" }}>
+                                      {indexA + 1}. {answer.title}{" "}
+                                    </CLabel>
+                                  </CCol>
+                                  <CCol lg="2" md="2">
+                                    <CIcon
+                                      className="text-success"
+                                      name="cil-check-circle"
+                                    ></CIcon>
+                                  </CCol>
+                                </CRow>
+                                <CRow hidden={answer.isCorrect}>
+                                  <CCol lg="10" md="10">
+                                    <CLabel
+                                      frameBorder
+                                      style={{ marginRight: "10px" }}
+                                    >
+                                      {indexA + 1}. {answer.title}{" "}
+                                    </CLabel>
+                                  </CCol>
+                                  <CCol lg="2" md="2">
+                                    <CIcon
+                                      className="text-danger"
+                                      name="cil-x-circle"
+                                    ></CIcon>
+                                  </CCol>
+                                </CRow>
+                              </div>
+                            )
+                          )}
+                        </CCardBody>
+                      </CCard>
                     </CCol>
-                )}
-            </CRow>
-            </CTabPane>
-            <CTabPane data-tab="assigned">
-              <br/>
-            <CButton
-                        hidden={role !== "ROLE_PROFESSOR"}
-                        style={{ marginBottom: "20px" }}
-                        id="confirmButton"
-                        onClick={() =>
-                          this.setState({ showModal: true })
-                        }
-                        color="success"
-                        className="px-4"
-                      >
-                        Add students
+                  ))}
+                </CRow>
+              </CTabPane>
+              <CTabPane data-tab="assigned">
+                <br />
+                <CButton
+                  hidden={role !== "ROLE_PROFESSOR"}
+                  style={{ marginBottom: "20px" }}
+                  id="confirmButton"
+                  onClick={() => this.setState({ showModal: true })}
+                  color="success"
+                  className="px-4"
+                >
+                  Add students
                 </CButton>
-              <CDataTable
-                        items={test_takes.filter(function (tt) {
-                            return !tt.done
-                        })}
-                        fields={fields}
-                        striped
-                        itemsPerPage={5}
-                        pagination
-                        scopedSlots={{
-                          "#": (item, index) => <td>{index + 1}</td>,
-                          name: (item, index) => <td>{item.student.user.name}</td>,
-                          lastname: (item, index) => (
-                            <td>{item.student.user.last_name}</td>
-                          ),
-                          email: (item, index) => <td>{item.student.user.email}</td>,
-                        }}
-                      />
-            </CTabPane>
-            <CTabPane data-tab="results">
-            <br/>
-              <CDataTable
-                        items={test_takes.filter(function (tt) {
-                            return tt.done
-                        })}
-                        fields={fields2}
-                        striped
-                        itemsPerPage={5}
-                        pagination
-                        scopedSlots={{
-                          "#": (item, index) => <td>{index + 1}</td>,
-                          name: (item, index) => <td>{item.student.user.name}</td>,
-                          lastname: (item, index) => (
-                            <td>{item.student.user.last_name}</td>
-                          ),
-                          email: (item, index) => <td>{item.student.user.email}</td>,
-                          details: (item, index) => <td>
+                <CDataTable
+                  items={test_takes.filter(function (tt) {
+                    return !tt.done;
+                  })}
+                  fields={fields}
+                  striped
+                  itemsPerPage={5}
+                  pagination
+                  scopedSlots={{
+                    "#": (item, index) => <td>{index + 1}</td>,
+                    name: (item, index) => <td>{item.student.user.name}</td>,
+                    lastname: (item, index) => (
+                      <td>{item.student.user.last_name}</td>
+                    ),
+                    email: (item, index) => <td>{item.student.user.email}</td>,
+                  }}
+                />
+              </CTabPane>
+              <CTabPane data-tab="results">
+                <br />
+                <CDataTable
+                  items={test_takes.filter(function (tt) {
+                    return tt.done;
+                  })}
+                  fields={fields2}
+                  striped
+                  itemsPerPage={5}
+                  pagination
+                  scopedSlots={{
+                    "#": (item, index) => <td>{index + 1}</td>,
+                    name: (item, index) => <td>{item.student.user.name}</td>,
+                    lastname: (item, index) => (
+                      <td>{item.student.user.last_name}</td>
+                    ),
+                    results: (item, index) => <td>
                           <CButton
                             color="success"
                             onClick={(event) => this.props.history.push("/tests/test/" + item.id)}
@@ -393,11 +417,11 @@ addStudents() {
                             Details
                           </CButton>
                         </td>
-                        }}
-                      />
-            </CTabPane>
-          </CTabContent>
-        </CTabs>
+                  }}
+                />
+              </CTabPane>
+            </CTabContent>
+          </CTabs>
         </CCardBody>
         <CModal
           show={this.state.showModal}

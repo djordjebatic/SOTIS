@@ -1,4 +1,5 @@
 from app import db
+from app.api.models.problem_edge import Problem, KnowledgeSpace
 
 
 class TestQuestion(db.Model):
@@ -30,10 +31,12 @@ class TestQuestion(db.Model):
         db.session.commit()
 
     def json_format(self):
-        if self.problem:
-            problem_id = self.problem.id
-        else:
-            problem_id = ''
+        ks = KnowledgeSpace.query.filter_by(test_id=self.test_id, is_real=False).first()
+        problem_id = ''
+        if ks:
+            problem = Problem.query.filter_by(knowledge_space_id=ks.id, test_question_id=self.id).first()
+            if problem:
+                problem_id = problem.id
         return {
             "id": self.id,
             "title": self.title,

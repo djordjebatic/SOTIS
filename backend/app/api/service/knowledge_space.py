@@ -220,13 +220,13 @@ class KnowledgeSpaceAPI(Resource):
         edges = graph['edges']
         nodes = graph['nodes']
         for edge in edges:
-            e = Edge.query.get(int(edge['id']))
-            e.lower_id = edge['source']
-            e.higher_id = edge['target']
+            e = Edge.query.get(int(edge['id'][1:]))
+            e.lower_id = edge['source'][1:]
+            e.higher_id = edge['target'][1:]
             e.knowledge_space_id = ks_id
             e.insert()
         for node in nodes:
-            p = Problem.query.get(int(node['id']))
+            p = Problem.query.get(int(node['id'][1:]))
             p.x = node['x']
             p.y = node['y']
             p.knowledge_space_id = ks_id

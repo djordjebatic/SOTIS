@@ -12,16 +12,15 @@ import {
   CLabel, 
   CInput,
   CFormText,
-  CRow,
   CCard,
-  CCardHeader,
   CCardBody,
   CTabs,
   CNav,
   CNavItem,
   CNavLink,
   CTabContent,
-  CTabPane
+  CTabPane,
+  CSelect
 } from '@coreui/react'
 
 import {
@@ -370,16 +369,16 @@ createGraph(knowledgeSpace){
   var i
   for (i in knowledgeSpace.edges) {
     edge = {
-      id: knowledgeSpace.edges[i].id,
-      source: knowledgeSpace.edges[i].lower_id,
-      target: knowledgeSpace.edges[i].higher_id,
+      id: "E" + knowledgeSpace.edges[i].id,
+      source: "N" + knowledgeSpace.edges[i].lower_id,
+      target: "N" + knowledgeSpace.edges[i].higher_id,
       type: EMPTY_EDGE_TYPE
     }
     edges.push(edge)
   } 
   for (i in knowledgeSpace.problems){
     node = {
-      id: knowledgeSpace.problems[i].id,
+      id: "N" + knowledgeSpace.problems[i].id,
       title: knowledgeSpace.problems[i].title,
       type: EMPTY_TYPE,
       x: knowledgeSpace.problems[i].x,
@@ -566,7 +565,8 @@ createGraph(knowledgeSpace){
     // Deselect events will send Null viewNode
     if (viewNode) {
       console.log("INFO NODE: " + viewNode.id)
-      axios.get(url + 'problem/' + viewNode.id)
+      let id = viewNode.id.substring(1);
+      axios.get(url + 'problem/' + id)
         .then((resp) => {
           NotificationManager.info(resp.data.title, '', 4000);
       })
@@ -589,8 +589,8 @@ createGraph(knowledgeSpace){
   // Deletes a node from the graph
   onDeleteNode = (viewNode: INode, nodeId: string, nodeArr: INode[]) => {
     console.log("Node: " + nodeId + viewNode[NODE_KEY] + viewNode);
-
-    axios.delete(url + 'problem/' + viewNode.id)
+    let id = viewNode.id.substring(1);
+    axios.delete(url + 'problem/' + id)
         .then((resp) => {
           this.getKnowledgeSpace();
           const graph = this.state.graph;
@@ -673,11 +673,11 @@ createGraph(knowledgeSpace){
           if (this.state.currentTab === 'expected' ){
 
     const graph = this.state.graph;
-
-    /*axios.delete(url + 'edge/' + )
-        .then((resp) => NotificationManager.success('Questions sorted', 'Success', 4000))
-        .catch((error) => NotificationManager.error('All nodes must be connected!', 'Error!', 4000))
-    */
+    var id = viewEdge.id.substring(1);
+    axios.delete(url + 'edge/' + id)
+        .then((resp) => NotificationManager.success('Edge deleted', 'Success', 4000))
+        .catch((error) => NotificationManager.error('Error!', 'Error', 4000))
+    
 
     console.log("Edge: " + viewEdge.source + " " + viewEdge.target);
 
@@ -865,7 +865,7 @@ createGraph(knowledgeSpace){
               </CFormGroup>
               <CFormGroup>
                       <CLabel htmlFor="problemTitle">Question</CLabel>
-                      <select
+                      <CSelect
                         value={this.state.question_id}
                         onChange={this.handleDropDown}
                       >
@@ -877,8 +877,7 @@ createGraph(knowledgeSpace){
                                 }
                             })
                         }
-                      </select>
-                      {this.state.question_id}
+                      </CSelect>
                     <CFormText className="help-block"><p style={{ color: "red" }}>{this.state.errorTitle}</p></CFormText>
               </CFormGroup>
               </CModalBody>

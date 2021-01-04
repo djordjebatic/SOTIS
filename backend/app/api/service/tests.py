@@ -25,3 +25,30 @@ class TestStudentsAPI(Resource):
         test = TestModel.query.get(test_id)
         course = Course.query.get(test.course_id)
         return [student.json_format() for student in course.students], 200
+
+
+class TestAPI(Resource):
+    def get(self, id):
+        test = TestModel.query.get(int(id))
+        questions = test.test_questions
+        for i in range(len(questions)):
+            question_answers = test.test_questions[i].test_question_answers
+            for j in range(len(question_answers)):
+                test.test_questions[i].test_question_answers[j].isCorrect = 0
+
+        return test.json_format(), 200
+
+    def put(self, id):
+        data = request.get_json()
+        students = data['students']
+        for student in students:
+            new_testTake = TestTake(test_id=id, student_id=student['id'], score=0)
+            new_testTake.insert()
+        test = TestModel.query.get(int(id))
+        questions = test.test_questions
+        for i in range(len(questions)):
+            question_answers = test.test_questions[i].test_question_answers
+            for j in range(len(question_answers)):
+                test.test_questions[i].test_question_answers[j].isCorrect = 0
+
+        return test.json_format(), 200

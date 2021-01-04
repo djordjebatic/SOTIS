@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import axios from "axios";
 
 import PropTypes from "prop-types";
@@ -87,8 +87,12 @@ class KnowledgeSpace extends RoleAwareComponent {
       (response) => {
         console.log(response);
         this.setState({ tests: response.data });
-        if (response.data.length > 0) {
-          this.setState({ test_id: response.data[0].id });
+        var temp = response.data.filter(function(test){
+          return test.knowledge_space === ''
+        })
+        if (temp.length > 0) {
+                
+          this.setState({ test_id: temp[0].id });
         }
       },
       (error) => {

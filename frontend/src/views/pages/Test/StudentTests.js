@@ -1,32 +1,18 @@
-import React, { Component } from 'react';
+import React from 'react';
 import axios from 'axios';
 
 import {
-  CRow,
-  CCard,
   CCardBody,
   CCardHeader,
-  CCardFooter,
-  CLabel,
-  CInput,
   CButton,
-  CCollapse,
-  CContainer,
-  CCol,
   CDataTable,
-  CFade,
-  CLink,
-  CFormGroup,
-  CInputCheckbox,
   CTabs,
   CNav,
   CNavItem,
   CNavLink,
   CTabContent,
   CTabPane,
-  CBadge
 } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
 
 import { RoleAwareComponent } from 'react-router-role-authorization'
 import {Redirect} from 'react-router-dom'
@@ -34,7 +20,7 @@ import {Redirect} from 'react-router-dom'
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
 const fields = ['#','course', 'title', 'max_score', 'take_test']
-const fields2 = ["#", "course", "title", "score", "details"];
+const fields2 = ["#", "course", "title", "score", "results"];
 const role = localStorage.getItem("role")
 
 class StudentTests extends RoleAwareComponent {
@@ -128,7 +114,7 @@ class StudentTests extends RoleAwareComponent {
                         scopedSlots={{
                           "#": (item, index) => <td>{index + 1}</td>,
                           score: (item, index) => <td>{item.score}/{item.max_score}</td>,
-                        details: (item, index) => <td>
+                        results: (item, index) => <td>
                           <CButton
                             color="success"
                             onClick={(event) => this.props.history.push("/tests/test/" + item.id)}

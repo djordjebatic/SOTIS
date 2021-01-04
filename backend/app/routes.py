@@ -28,7 +28,7 @@ from app.api.service.knowledge_space import KnowledgeSpaceAPI, CompareKnowledgeS
 from app.api.service.auth import UserRegistration, UserLogin, UserLogout
 from app.api.service.users import UserAPI, UsersAPI
 from app.api.service.courses import CourseAPI, CoursesListAPI, CourseTestsAPI, CourseStudentsAPI, CourseKSAPI
-from app.api.service.tests import GetTestAPI, GetTestTakeAPI
+from app.api.service.tests import GetTestAPI, GetTestTakeAPI, TestAPI
 
 
 # if not current_user.is_authenticated:
@@ -225,8 +225,8 @@ class EdgeAPI(Resource):
     def post(self):
         data = request.get_json()
 
-        lower_node_id = data['lower_id']
-        upper_node_id = data['upper_id']
+        lower_node_id = data['lower_id'][1:]
+        upper_node_id = data['upper_id'][1:]
 
         knowledge_space_id = data['knowledge_space_id']
 
@@ -349,9 +349,6 @@ api.add_resource(UserLogin, '/login')
 api.add_resource(UserLogout, '/logout')
 api.add_resource(CreateTest, '/test')
 api.add_resource(TestTakeAPI, '/test_take')
-api.add_resource(ProblemAPI, '/problem')
-api.add_resource(EdgeAPI, '/edge')
-api.add_resource(CreateTestTake, '/test_take')
 api.add_resource(ProblemAPI, '/problem', '/problem/<problem_id>')
 api.add_resource(EdgeAPI, '/edge', '/edge/<edge_id>')
 api.add_resource(KnowledgeSpaceAPI, '/knowledge_space')
@@ -428,7 +425,6 @@ def getTestTake(id, done):
             "test": test.json_format()
         }
     return ret, 200
-
 
 
 @jwt.user_claims_loader

@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import axios from "axios";
 
 import {
@@ -27,14 +27,7 @@ class Courses extends RoleAwareComponent {
   constructor(props) {
     super(props);
     this.state = {
-      courses: [
-        {
-          title: "Predmet 1",
-          tests: [],
-          professors: [],
-          students: [],
-        },
-      ],
+      courses: [],
       showModal: false,
       title: "",
       errorTitle: "",
