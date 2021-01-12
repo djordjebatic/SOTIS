@@ -28,7 +28,7 @@ from app.api.service.knowledge_space import KnowledgeSpaceAPI, CompareKnowledgeS
 from app.api.service.auth import UserRegistration, UserLogin, UserLogout
 from app.api.service.users import UserAPI, UsersAPI
 from app.api.service.courses import CourseAPI, CoursesListAPI, CourseTestsAPI, CourseStudentsAPI, CourseKSAPI
-from app.api.service.tests import GetTestAPI, GetTestTakeAPI, TestAPI
+from app.api.service.tests import GetTestAPI, GetTestTakeAPI, TestAPI, QTITestAPI
 
 
 # if not current_user.is_authenticated:
@@ -367,6 +367,7 @@ api.add_resource(CourseStudentsAPI, "/course/<int:course_id>/<string:role>")
 api.add_resource(GetTestAPI, "/test/<int:test_id>")
 api.add_resource(GetTestTakeAPI, "/test/<int:test_id>/test_take")
 api.add_resource(TestAPI, "/test/<int:id>")
+api.add_resource(QTITestAPI, "/qti-test/<int:id>")
 
 # def get_current_user():
 #     with current_app.request_context():
