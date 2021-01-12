@@ -26,6 +26,7 @@ import * as _ from "lodash";
 
 import { RoleAwareComponent } from "react-router-role-authorization";
 import { Redirect } from "react-router-dom";
+import {NotificationManager} from 'react-notifications';
 
 import NewTest from "./NewTest";
 
@@ -55,6 +56,7 @@ class TestsPage extends RoleAwareComponent {
     this.allowedRoles = ["ROLE_PROFESSOR", "ROLE_STUDENT"];
 
     this.getTests = this.getTests.bind(this);
+    this.getXML = this.getXML.bind(this);
     this.toggleAccordion = this.toggleAccordion.bind(this);
     this.generateAccordion = this.generateAccordion.bind(this);
     this.setCollapsed = this.setCollapsed.bind(this);
@@ -91,6 +93,26 @@ class TestsPage extends RoleAwareComponent {
       },
       (error) => {
         console.log(error);
+      }
+    );
+  }
+
+  getXML(id) {
+    axios({
+      method: "post",
+      url: url + "qti-test/" + id,
+      responseType: 'blob',
+    }).then(
+      (response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'test.xml'); 
+        document.body.appendChild(link);
+        link.click();
+      },
+      (error) => {
+        NotificationManager.error('Internal Sever Error!', 'Error!', 4000);
       }
     );
   }
@@ -209,6 +231,14 @@ class TestsPage extends RoleAwareComponent {
                       >
                         Details
                       </CButton>
+                      <CButton
+                        hidden={this.state.role === "ROLE_STUDENT"}
+                        color="primary"
+                        onClick={() => this.getXML(test.id)}
+                      >
+                        Download XML
+                      </CButton>
+
                     </CCardFooter>
                   </CCollapse>
                 </CCard>

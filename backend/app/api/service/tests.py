@@ -60,7 +60,7 @@ class TestAPI(Resource):
 
 
 class QTITestAPI(Resource):
-    def get(self, id):
+    def post(self, id):
         test = TestModel.query.get(id)
 
         if not test:
