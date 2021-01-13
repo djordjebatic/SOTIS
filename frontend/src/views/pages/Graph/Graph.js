@@ -272,7 +272,8 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
         "problems": [],
         "edges": []
       },
-      currentTab: 'expected'
+      currentTab: 'expected',
+      similarity: 0
     };
 
     let arr = [];
@@ -812,6 +813,16 @@ createGraph(knowledgeSpace){
       console.log(error);
     }); 
 
+    axios({
+      method: 'get',
+      url: url + 'compare-graphs/' + this.state.knowledgeSpace.test_id,
+      //headers: { "Authorization": AuthStr } ,   
+    }).then((response) => {
+        this.setState({ similarity: response.data })
+        NotificationManager.success('Similarity score is: ' + response.data, 'Success!', 40000);
+    }, (error) => {
+        console.log(error);
+    });
   }
 
   generateReal(){

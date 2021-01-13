@@ -101,13 +101,13 @@ class TestsPage extends RoleAwareComponent {
     axios({
       method: "post",
       url: url + "qti-test/" + id,
-      responseType: 'blob',
+      responseType: 'arraybuffer',
     }).then(
       (response) => {
-        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/zip" }));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', 'test.xml'); 
+        link.setAttribute('download', 'test.zip'); 
         document.body.appendChild(link);
         link.click();
       },
