@@ -45,7 +45,8 @@ security = Security(app, user_datastore)
 
 principals = Principal(app)
 
-"""db.drop_all()
+"""
+db.drop_all()
 db.create_all()
 
 course = Course("Quick mafs")
@@ -70,9 +71,15 @@ u2.insert()
 stud = Student(u2.id)
 stud.insert()
 
-u3 = User('Milan', 'Milanovic', 'admin', 'admin123', 'admin@email.com', True)
-u3.add_role(role1)
+u3 = User('Marko', 'Markovic', 'student2', 'student2', 'student2@email.com')
+u3.add_role(role2)
 u3.insert()
+stud = Student(u3.id)
+stud.insert()
+
+u4 = User('Milan', 'Milanovic', 'admin', 'admin123', 'admin@email.com', True)
+u4.add_role(role1)
+u4.insert()
 
 test = TestModel(title='Test example', professor_id=prof.id, max_score=15, course_id=1)
 test.insert()
