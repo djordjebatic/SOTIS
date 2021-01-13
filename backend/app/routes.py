@@ -24,7 +24,7 @@ from flask_login import login_user, logout_user, current_user
 
 
 from app.api.service.knowledge_space import KnowledgeSpaceAPI, CompareKnowledgeSpace, GenerateRealKnowledgeSpace,\
-    GetKnowledgeSpace
+    GetKnowledgeSpace, GraphComparisonAPI
 from app.api.service.auth import UserRegistration, UserLogin, UserLogout
 from app.api.service.users import UserAPI, UsersAPI
 from app.api.service.courses import CourseAPI, CoursesListAPI, CourseTestsAPI, CourseStudentsAPI, CourseKSAPI
@@ -159,7 +159,7 @@ class TestTakeAPI(Resource):
         test = data['test']
         # test_take = TestTake(student_id=student.id, test_id=data['test_id'], score=0)
         # test_take.insert()
-        test_take = TestTake.query.get(data['test_take_id'])
+        test_take = TestTake.query.filter(TestTake.student_id == student.id, TestTake.test_id == data['test_id']).first()
 
         questions = test['test_questions']
 
@@ -368,6 +368,7 @@ api.add_resource(GetTestAPI, "/test/<int:test_id>")
 api.add_resource(GetTestTakeAPI, "/test/<int:test_id>/test_take")
 api.add_resource(TestAPI, "/test/<int:id>")
 api.add_resource(QTITestAPI, "/qti-test/<int:id>")
+api.add_resource(GraphComparisonAPI, "/compare-graphs/<int:test_id>")
 
 # def get_current_user():
 #     with current_app.request_context():
