@@ -10,12 +10,14 @@ class KnowledgeSpace(db.Model):
     edges = db.relationship('Edge', backref='knowledge_space', lazy='subquery')
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+    is_all_states = db.Column(db.Boolean, nullable=False)
 
-    def __init__(self, title, test_id, is_real, course_id):
+    def __init__(self, title, test_id, is_real, course_id, is_all_states=False):
         self.title = title,
         self.test_id = test_id
         self.is_real = is_real
         self.course_id = course_id
+        self.is_all_states = is_all_states
 
     def insert(self):
         db.session.add(self)
@@ -36,7 +38,8 @@ class KnowledgeSpace(db.Model):
             "problems": [problem.json_format() for problem in self.problems],
             "edges": [edge.json_format() for edge in self.edges],
             "isReal": self.is_real,
-            "course_id": self.course_id
+            "course_id": self.course_id,
+            "is_all_states": self.is_all_states
         }
 
 
@@ -50,7 +53,7 @@ class Problem(db.Model):
     y = db.Column(db.Float, nullable=False)
     knowledge_space_id = db.Column(db.Integer, db.ForeignKey('knowledge_space.id'), nullable=False)
     #question = db.relationship('TestQuestion', backref='problem', lazy='subquery')
-    test_question_id = db.Column(db.Integer, db.ForeignKey('test_question.id'), nullable=False)
+    test_question_id = db.Column(db.Integer, db.ForeignKey('test_question.id'), nullable=True)
 
     def __init__(self, title, knowledge_space_id, x, y, test_question_id):
         self.title = title
@@ -97,11 +100,11 @@ class Edge(db.Model):
     higher_id = db.Column(db.Integer, db.ForeignKey("problem.id"))
 
     lower_node = db.relationship(
-        Problem, primaryjoin=lower_id == Problem.id, backref="lower_edges"
+        Problem, primaryjoin=lower_id == Problem.id, backref=db.backref("lower_edges", lazy='subquery')
     )
 
     higher_node = db.relationship(
-        Problem, primaryjoin=higher_id == Problem.id, backref="upper_edges"
+        Problem, primaryjoin=higher_id == Problem.id, backref=db.backref("upper_edges", lazy='subquery')
     )
 
     def __init__(self, n1, n2, knowledge_space_id):

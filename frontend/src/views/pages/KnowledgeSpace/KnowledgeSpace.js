@@ -86,13 +86,12 @@ class KnowledgeSpace extends RoleAwareComponent {
     }).then(
       (response) => {
         console.log(response);
-        this.setState({ tests: response.data });
         var temp = response.data.filter(function(test){
-          return test.knowledge_space === ''
+          return test.knowledge_space_id === ""
         })
         if (temp.length > 0) {
                 
-          this.setState({ test_id: temp[0].id });
+          this.setState({ test_id: temp[0].id, tests:temp });
         }
       },
       (error) => {
@@ -194,7 +193,7 @@ class KnowledgeSpace extends RoleAwareComponent {
         </CCol>
         <CRow>
           {this.state.knowledgeSpaces.map((ks, index) => (
-            <CCol xs="12" sm="6" lg="3" hidden={ks.isReal}>
+            <CCol xs="12" sm="6" lg="3" hidden={ks.isReal || ks.is_all_states}>
               <CWidgetBrand
                 onClick={(event) =>
                   history.push("/knowledgeSpace/" + ks.id)

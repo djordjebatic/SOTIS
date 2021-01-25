@@ -199,7 +199,10 @@ class ProblemAPI(Resource):
         problem = Problem.query.filter(Problem.id == problem_id).first()
         if problem:
             question = TestQuestion.query.filter(TestQuestion.problem == problem).first()
-            return question.json_format(), 200
+            if question:
+                return question.json_format(), 200
+            else:
+                return problem.json_format(), 200
         else:
             return {'error': 'Problem with id {} does\'t exist'.format(problem_id)}, 409
 
