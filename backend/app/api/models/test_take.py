@@ -12,6 +12,7 @@ class TestTake(db.Model):
     score = db.Column(db.Integer, nullable=False)
     test_take_answers = db.relationship('TestTakeAnswer', backref='test_take', lazy='subquery')
     done = db.Column(db.Boolean, nullable=False)
+    state_probabilities = db.relationship('StateProbability', backref='test_take', lazy='subquery')
 
     def __init__(self, student_id, test_id, score):
         self.student_id = student_id
@@ -43,5 +44,5 @@ class TestTake(db.Model):
             "test_id": self.test_id,
             "score": self.score,
             "test_take_answers": [test_take_answer.json_format() for test_take_answer in self.test_take_answers],
-            "done": self.done
+            "done": self.done,
         }

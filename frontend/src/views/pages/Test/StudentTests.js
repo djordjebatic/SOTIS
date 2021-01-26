@@ -19,7 +19,7 @@ import {Redirect} from 'react-router-dom'
 
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
-const fields = ['#','course', 'title', 'max_score', 'take_test']
+const fields = ['#','course', 'title', 'max_score', 'take_test', 'guided_testing']
 const fields2 = ["#", "course", "title", "score", "results"];
 const role = localStorage.getItem("role")
 
@@ -97,7 +97,15 @@ class StudentTests extends RoleAwareComponent {
                           >
                             Take test
                           </CButton>
-                        </td>
+                        </td>,
+                        guided_testing: (item, index) =><td>
+                        <CButton
+                          color="primary"
+                          onClick={(event) => this.props.history.push("/tests/takeGuided/" + item.id)}
+                        >
+                          Start guided testing
+                        </CButton>
+                      </td>
                         }}
                       />
             </CTabPane>

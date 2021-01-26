@@ -12,6 +12,7 @@ courses_professors = db.Table(
     db.Column('course_id', db.Integer(), db.ForeignKey('course.id'))
 )
 
+
 class Course(db.Model):
     __tablename__ = 'course'
 

@@ -54,6 +54,7 @@ class Problem(db.Model):
     knowledge_space_id = db.Column(db.Integer, db.ForeignKey('knowledge_space.id'), nullable=False)
     #question = db.relationship('TestQuestion', backref='problem', lazy='subquery')
     test_question_id = db.Column(db.Integer, db.ForeignKey('test_question.id'), nullable=True)
+    state_probabilities = db.relationship('StateProbability', backref='problem', lazy='subquery')
 
     def __init__(self, title, knowledge_space_id, x, y, test_question_id):
         self.title = title

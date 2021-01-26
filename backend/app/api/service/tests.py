@@ -4,9 +4,19 @@ from app.api.models.test_question_answer import TestQuestionAnswer
 from app.api.models.test import TestModel
 from app.api.models.test_take import TestTake
 from app.api.models.test import TestModel
+from app.api.models.test_question import TestQuestion
 from app.api.models.course import Course
+from app.api.models.problem_edge import KnowledgeSpace, Problem
+from app.api.models.state_probability import StateProbability
 from flask import request, send_file
 from flask_restful import Resource
+import random
+from operator import attrgetter
+
+from flask_jwt_extended import (
+    jwt_required,
+    get_jwt_identity
+)
 
 import zipfile
 from io import BytesIO
@@ -76,7 +86,8 @@ class QTITestAPI(Resource):
             root = ET.Element("qti-assessment-test")
             root.set("xmlns", "http://www.imsglobal.org/xsd/imsqtiasi_v3p0")
             root.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
-            root.set("xsi:schemaLocatio", "http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0_v1p0.xsd")
+            root.set("xsi:schemaLocatio",
+                     "http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0_v1p0.xsd")
             root.set("identifier", str(test.id))
             root.set("title", test.title)
 
@@ -136,7 +147,8 @@ class QTITestAPI(Resource):
                 tree_question._setroot(question_item)
                 tree_question.write(bio_question, encoding='UTF-8', xml_declaration=True)
 
-                zip_file.writestr("questions/test" + str(test.id) + "-" + str(question.id) + ".xml", bio_question.getvalue())
+                zip_file.writestr("questions/test" + str(test.id) + "-" + str(question.id) + ".xml",
+                                  bio_question.getvalue())
 
             tree._setroot(root)
             tree.write(bio, encoding='UTF-8', xml_declaration=True)
@@ -146,3 +158,152 @@ class QTITestAPI(Resource):
         data.seek(0)
 
         return send_file(data, attachment_filename=test.title + '.zip', mimetype='application/zip', as_attachment=True)
+
+
+class GuidedTestingAPI(Resource):
+    def get(self, id):
+        test_take = TestTake.query.get(id)
+        test = TestModel.query.get(test_take.test_id)
+
+        knowledge_space = KnowledgeSpace.query.filter_by(test_id=test_take.test_id, is_all_states=True).first()
+        expected_ks = KnowledgeSpace.query.filter_by(test_id=test_take.test_id, is_all_states=False, is_real=False).first()
+        if knowledge_space is None:
+            if expected_ks is None or len(expected_ks.problems) < len(test.test_questions):
+                return "Knowledge State not found", 404
+            else:
+                questions = sorted(test.test_questions, key=lambda question: question.position)
+                question = questions[0]
+        else:
+            generate_probabilities(test_take, knowledge_space)
+            all_state_probabilities = sorted(test_take.state_probabilities, key=lambda probability: probability.value, reverse=True)
+            problem = Problem.query.get(all_state_probabilities[0].problem_id)
+            if len(problem.questions) == 0:
+                problem = Problem.query.get(all_state_probabilities[1].problem_id)
+            questions_titles = problem.title.split(", ")
+            question = find_next_question(test_take)
+        for i in range(len(question.test_question_answers)):
+            question.test_question_answers[i].isCorrect = 0
+        ret = {
+            "test_title": test.title,
+            "question_number": 1,
+            "question": question.json_format()
+        }
+        return ret, 200
+
+    @jwt_required
+    def post(self, id):
+
+        test_take = TestTake.query.get(id)
+        test = TestModel.query.get(test_take.test_id)
+
+        data = request.get_json()
+        answered_question = data['question']
+        question_number = data['question_number']
+        r = 1
+        for answer in answered_question['test_question_answers']:
+            test_take_answer = TestTakeAnswer(test_take_id=test_take.id, test_question_id=answered_question['id'],
+                                              test_question_answer_id=answer['id'], selected=answer['isCorrect'],
+                                              question_number=question_number)
+            test_take_answer.insert()
+            real_answer = TestQuestionAnswer.query.get(answer['id'])
+            if real_answer.isCorrect != answer['isCorrect']:
+                r = 0
+
+        theta = 0.5
+        states_probabilities = StateProbability.query.filter_by(test_take_id=test_take.id).all()
+        question_title = answered_question['title']
+        total_q = 0
+        total_not_q = 0
+        k_q = []
+        k_not_q = []
+        for probability in states_probabilities:
+            problem = Problem.query.get(probability.problem_id)
+            questions_titles = problem.title.split(", ")
+            if question_title in questions_titles:
+                total_q = total_q + probability.value
+                k_q.append(probability)
+            else:
+                total_not_q = total_not_q + probability.value
+                k_not_q.append(probability)
+        for p in k_q:
+            p.value = (1 - theta) * p.value + r*p.value/total_q
+            p.update()
+        for p in k_not_q:
+            p.value = (1 - theta) * p.value + (1-r)*p.value/total_not_q
+            p.update()
+        # TODO provjeriti da li je kraj
+        states_probabilities = StateProbability.query.filter_by(test_take_id=test_take.id).all()
+        values = [pr.value for pr in states_probabilities]
+        max_value = max(values)
+        if max_value > 0.9:
+            test_take.done = True
+            test_take.update()
+            ret = {
+                "finished": True
+            }
+            return ret, 200
+        # TODO ako nije, pronaci sledece pitanje
+        question = find_next_question(test_take)
+        if question is None:
+            test_take.done = True
+            test_take.update()
+            ret = {
+                "finished": True
+            }
+            return ret, 200
+
+        for i in range(len(question.test_question_answers)):
+            question.test_question_answers[i].isCorrect = 0
+        ret = {
+            "test_title": test.title,
+            "question_number": question_number+1,
+            "question": question.json_format()
+        }
+        return ret, 200
+
+
+def generate_probabilities(test_take, knowledge_space):
+    for problem in knowledge_space.problems:
+        all_probabilities = StateProbability.query.filter_by(problem_id=problem.id).all()
+        if len(all_probabilities) > 0:
+            probabilities = [p.value for p in all_probabilities]
+            p = sum(probabilities)/len(probabilities)
+            new_state_probability = StateProbability(test_take_id=test_take.id, problem_id=problem.id, value=p)
+            new_state_probability.insert()
+        else:
+            new_state_probability = StateProbability(test_take_id=test_take.id, problem_id=problem.id,
+                                                     value=1 / len(knowledge_space.problems))
+            new_state_probability.insert()
+
+
+def find_next_question(test_take):
+    test = TestModel.query.get(test_take.test_id)
+    all_questions = test.test_questions
+    test_take_answers = TestTakeAnswer.query.filter_by(test_take_id=test_take.id).all()
+    finished_questions = [a.test_question_id for a in test_take_answers]
+    remained = [question for question in all_questions if question.id not in finished_questions]
+    if len(remained) == 0:
+        return None
+    min_value = 100
+    min_list = []
+    d = dict()
+    all_states_probabilities = StateProbability.query.filter_by(test_take_id=test_take.id)
+    for p in all_states_probabilities:
+        problem = Problem.query.get(p.problem_id)
+        question_titles = problem.title.split(", ")
+        for q in question_titles:
+            if q in d:
+                d[q] = d[q] + p.value
+            else:
+                d[q] = 0
+    for question in remained:
+        quantity = abs(2*d[question.title] - 1)
+        if quantity < min_value:
+            min_list = [question]
+            min_value = quantity
+        elif quantity == min_value:
+            min_list.append(question)
+    if len(min_list) == 1:
+        return min_list[0]
+    question_index = random.randint(0, len(min_list)-1)
+    return min_list[question_index]

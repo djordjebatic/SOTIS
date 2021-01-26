@@ -185,6 +185,9 @@ def create_graph(test, implications):
                             for q in problem.questions:
                                 q.problems.append(new_problem)
                                 q.insert()
+                            # if len(new_problem.questions) == n:
+                            #     new_problem.title = "Q"
+                            #     new_problem.update()
                         else:
                             old_problem = Problem.query.get(key)
                             new_edge = Edge(knowledge_space_id=ks_all.id, n1=problem, n2=old_problem)
