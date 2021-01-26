@@ -164,8 +164,20 @@ class GuidedTestingAPI(Resource):
     def get(self, id):
         test_take = TestTake.query.get(id)
         test = TestModel.query.get(test_take.test_id)
-
         knowledge_space = KnowledgeSpace.query.filter_by(test_id=test_take.test_id, is_all_states=True).first()
+        if test_take.done:
+            all_state_probabilities = sorted(test_take.state_probabilities, key=lambda probability: probability.value, reverse=True)
+            values = [pr.value for pr in all_state_probabilities]
+            max_p = max(values)
+            index_max_p = values.index(max_p)
+            ret = {
+                "finished": test_take.done,
+                "test_title": test.title,
+                "knowledge_space": knowledge_space.json_format(),
+                "state": all_state_probabilities[index_max_p].problem_id
+            }
+            return ret, 200
+
         expected_ks = KnowledgeSpace.query.filter_by(test_id=test_take.test_id, is_all_states=False, is_real=False).first()
         if knowledge_space is None:
             if expected_ks is None or len(expected_ks.problems) < len(test.test_questions):
@@ -231,24 +243,41 @@ class GuidedTestingAPI(Resource):
         for p in k_not_q:
             p.value = (1 - theta) * p.value + (1-r)*p.value/total_not_q
             p.update()
-        # TODO provjeriti da li je kraj
+
         states_probabilities = StateProbability.query.filter_by(test_take_id=test_take.id).all()
         values = [pr.value for pr in states_probabilities]
         max_value = max(values)
         if max_value > 0.9:
             test_take.done = True
             test_take.update()
+            knowledge_space = KnowledgeSpace.query.filter_by(test_id=test_take.test_id, is_all_states=True).first()
+            all_state_probabilities = sorted(test_take.state_probabilities, key=lambda probability: probability.value, reverse=True)
+            values = [pr.value for pr in all_state_probabilities]
+            max_p = max(values)
+            index_max_p = values.index(max_p)
             ret = {
-                "finished": True
+                "finished": test_take.done,
+                "test_title": test.title,
+                "knowledge_space": knowledge_space.json_format(),
+                "state": all_state_probabilities[index_max_p].problem_id
             }
             return ret, 200
-        # TODO ako nije, pronaci sledece pitanje
+
         question = find_next_question(test_take)
         if question is None:
             test_take.done = True
             test_take.update()
+            knowledge_space = KnowledgeSpace.query.filter_by(test_id=test_take.test_id, is_all_states=True).first()
+            all_state_probabilities = sorted(test_take.state_probabilities, key=lambda probability: probability.value,
+                                             reverse=True)
+            values = [pr.value for pr in all_state_probabilities]
+            max_p = max(values)
+            index_max_p = values.index(max_p)
             ret = {
-                "finished": True
+                "finished": test_take.done,
+                "test_title": test.title,
+                "knowledge_space": knowledge_space.json_format(),
+                "state": all_state_probabilities[index_max_p].problem_id
             }
             return ret, 200
 

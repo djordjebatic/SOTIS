@@ -23,11 +23,52 @@ import CIcon from '@coreui/icons-react'
 import { RoleAwareComponent } from 'react-router-role-authorization'
 import {Redirect} from 'react-router-dom'
 import {NotificationManager} from 'react-notifications';
-
+import {
+  GraphView,
+  IEdge,
+  Node,
+  LayoutEngineType,
+} from 'react-digraph';
+import GraphConfig, {
+  edgeTypes,
+  EMPTY_EDGE_TYPE,
+  EMPTY_TYPE,
+  NODE_KEY,
+  nodeTypes,
+  COMPLEX_CIRCLE_TYPE,
+  POLY_TYPE,
+  SPECIAL_CHILD_SUBTYPE,
+  SPECIAL_EDGE_TYPE,
+  SPECIAL_TYPE,
+  SKINNY_TYPE,
+  RED_EDGE_TYPE,
+  GREEN_EDGE_TYPE,
+  GREEN_TYPE
+} from '../Graph/graph-config'; // Configures node/edge types
 
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
-class TakeGuided extends RoleAwareComponent {
+export type IGraph = {
+  nodes: INode[],
+  edges: IEdge[],
+};
+
+type IGraphProps = {};
+
+type IGraphState = {
+  graph: any,
+  selected: any,
+  totalNodes: number,
+  copiedNode: any,
+  layoutEngineType?: LayoutEngineType,
+};
+
+const sample: IGraph = {
+  edges:[],
+  nodes:[]
+}
+
+class TakeGuided extends React.Component<IGraphProps, IGraphState> {
   constructor(props) {
     super(props);
     this.state = {
@@ -37,7 +78,10 @@ class TakeGuided extends RoleAwareComponent {
       },
       question_number: 0,
       test_title: '',
-      finished: false
+      finished: false,
+      graph: sample,
+      selected: null,
+      state_id:1
     };
 
     let arr = [];
@@ -49,6 +93,7 @@ class TakeGuided extends RoleAwareComponent {
     this.getTest = this.getTest.bind(this);
     this.handleChange = this.handleChange.bind(this)
     this.submitAnswers = this.submitAnswers.bind(this)
+    this.createGraph = this.createGraph.bind(this)
   }
 
   componentDidMount() {
@@ -61,11 +106,61 @@ class TakeGuided extends RoleAwareComponent {
       method: 'get',
       url: url + 'tests/take_guided/' + id,
     }).then((response) => {
+      if (response.data.finished){
+        this.setState({finished: true, test_title:response.data.test_title, state_id:response.data.state})
+        this.createGraph(response.data.knowledge_space)
+      }
+      else{
       this.setState({ question: response.data.question, test_title: response.data.test_title, question_number:response.data.question_number})
+      }
     }, (error) => {
       this.props.history.push("/tests/takeTest/" + id)
       console.log(error);
     });
+  }
+
+  createGraph(knowledgeSpace){
+    let edges = []
+    let nodes = []
+    let edge = {}
+    let node = {}
+    var i
+    for (i in knowledgeSpace.edges) {
+      edge = {
+        id: knowledgeSpace.edges[i].id,
+        source: knowledgeSpace.edges[i].lower_id,
+        target: knowledgeSpace.edges[i].higher_id,
+        type: EMPTY_EDGE_TYPE
+      }
+      edges.push(edge)
+    } 
+    for (i in knowledgeSpace.problems){
+      if (knowledgeSpace.problems[i].id == this.state.state_id){
+        node = {
+          id: knowledgeSpace.problems[i].id,
+          title: knowledgeSpace.problems[i].title,
+          type: GREEN_TYPE,
+          x: knowledgeSpace.problems[i].x,
+          y: knowledgeSpace.problems[i].y,
+        }
+      }
+      else{
+      node = {
+        id: knowledgeSpace.problems[i].id,
+        title: knowledgeSpace.problems[i].title,
+        type: EMPTY_TYPE,
+        x: knowledgeSpace.problems[i].x,
+        y: knowledgeSpace.problems[i].y,
+      }
+    }
+      nodes.push(node)
+    }
+  
+    const temp: IGraph = {
+      edges: edges,
+      nodes: nodes
+    };
+    this.setState({graph:temp})
   }
 
   handleChange(answer) {
@@ -89,7 +184,8 @@ class TakeGuided extends RoleAwareComponent {
       data: data
     }).then((response) => {
         if (response.data.finished){
-          this.setState({finished: true, graph:response.data.ks})
+          this.setState({finished: true, test_title:response.data.test_title, state_id:response.data.state})
+          this.createGraph(response.data.knowledge_space)
         }
         else{
           this.setState({ question: response.data.question, test_title: response.data.test_title, question_number:response.data.question_number})
@@ -101,7 +197,11 @@ class TakeGuided extends RoleAwareComponent {
 
   render() {
     const question = this.state.question;
-    const num = this.state.question_number
+    const num = this.state.question_number;
+    const { nodes, edges } = this.state.graph;
+    const { NodeTypes, NodeSubtypes, EdgeTypes } = GraphConfig;
+    const selected = this.state.selected;
+
     let ret = (
       <div>
         <CCol xl="12" lg="12" md="12" sm="12">
@@ -109,7 +209,7 @@ class TakeGuided extends RoleAwareComponent {
             <CCardHeader>
               <h1>{this.state.test_title}</h1>
             </CCardHeader>
-            <CCardBody>
+            <CCardBody hidden={this.state.finished}>
               <div id="accordion">
                   <CCard>
                   <CCardHeader>
@@ -134,14 +234,42 @@ class TakeGuided extends RoleAwareComponent {
                   </CCard>
               </div>
             </CCardBody>
-            <CCardFooter>
+            <CCardFooter hidden={this.state.finished}>
               <CButton color="success" style={{ marginLeft: "10px", height: "40px" }} onClick={event => this.submitAnswers()}>Submit</CButton>
             </CCardFooter>
+          </CCard>
+          <CCard hidden={!this.state.finished}>
+            <CCardBody>
+            <div id="graph" style={{ height:"700px" }}>
+            <GraphView
+            ref={el => (this.GraphView = el)}
+            nodeKey={NODE_KEY}
+            nodes={nodes}
+            edges={edges}
+            selected={selected}
+            nodeTypes={NodeTypes}
+            nodeSubtypes={NodeSubtypes}
+            edgeTypes={EdgeTypes}
+            onSelectNode={this.onSelectNode}
+            onCreateNode={this.onCreateNode}
+            onUpdateNode={this.onUpdateNode}
+            onDeleteNode={this.onDeleteNode}
+            onSelectEdge={this.onSelectEdge}
+            onCreateEdge={this.onCreateEdge}
+            onSwapEdge={this.onSwapEdge}
+            onDeleteEdge={this.onDeleteEdge}
+            onUndo={this.onUndo}
+            onCopySelected={this.onCopySelected}
+            onPasteSelected={this.onPasteSelected}
+            layoutEngineType={this.state.layoutEngineType}
+          />
+          </div>
+            </CCardBody>
           </CCard>
         </CCol>
       </div>
     );
-    return this.rolesMatched() ? ret : <Redirect to="/courses" />;
+    return ret;
   }
 }
 

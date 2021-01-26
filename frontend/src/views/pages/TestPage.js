@@ -88,11 +88,21 @@ class TestPage extends RoleAwareComponent {
   }
 
   render() {
+    const { id } = this.props.match.params;
     let ret =  (
       <div>
         <CCardHeader style={{backgroundColor:"whitesmoke"}}>
             <h2>{this.state.test.title}</h2>
         </CCardHeader>
+        <br></br>
+        <CButton
+                          color="primary"
+                          onClick={(event) => this.props.history.push("/tests/takeGuided/" + id)}
+                        >
+                          Show knowledge state
+          </CButton>
+          <br></br>
+          <br></br>
           <table responsive style={{border:"1px solid black", width: "100%", backgroundColor:"whitesmoke"}}>
           <thead style={{textAlign:"center"}}>
             <th><h3>Question</h3></th>            
