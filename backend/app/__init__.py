@@ -46,6 +46,7 @@ security = Security(app, user_datastore)
 
 principals = Principal(app)
 
+"""
 db.drop_all()
 db.create_all()
 
@@ -78,6 +79,12 @@ course.update()
 u3 = User('Milan', 'Milanovic', 'admin', 'admin123', 'admin@email.com', True)
 u3.add_role(role1)
 u3.insert()
+stud = Student(u3.id)
+stud.insert()
+
+u4 = User('Milan', 'Milanovic', 'admin', 'admin123', 'admin@email.com', True)
+u4.add_role(role1)
+u4.insert()
 
 test = TestModel(title='Test example', professor_id=prof.id, max_score=15, course_id=1)
 test.insert()
@@ -158,4 +165,5 @@ e4.insert()
 
 new_testTake = TestTake(test_id=1, student_id=1, score=0)
 new_testTake.insert()
+'""
 # TODO dodati drugi test i drugi KS koji se zove Programiranje
