@@ -23,6 +23,7 @@ import CIcon from '@coreui/icons-react'
 
 import { RoleAwareComponent } from 'react-router-role-authorization'
 import {Redirect} from 'react-router-dom'
+import { faIndustry, faInfinity } from '@fortawesome/free-solid-svg-icons';
 
 const url = (process.env.REACT_APP_DOMAIN) + ':' + (process.env.REACT_APP_PORT) + '/';
 
@@ -80,16 +81,28 @@ class TestPage extends RoleAwareComponent {
     var find = this.state.testTake.test_take_answers.filter(function(result) {
       return result.test_question_id === question && result.test_question_answer_id === answer;
     });
-    
+    if (find.length == 0){
+      return -1
+    }
     return find[0].selected;
   }
 
   render() {
+    const { id } = this.props.match.params;
     let ret =  (
       <div>
         <CCardHeader style={{backgroundColor:"whitesmoke"}}>
             <h2>{this.state.test.title}</h2>
         </CCardHeader>
+        <br></br>
+        <CButton
+                          color="primary"
+                          onClick={(event) => this.props.history.push("/tests/takeGuided/" + id)}
+                        >
+                          Show knowledge state
+          </CButton>
+          <br></br>
+          <br></br>
           <table responsive style={{border:"1px solid black", width: "100%", backgroundColor:"whitesmoke"}}>
           <thead style={{textAlign:"center"}}>
             <th><h3>Question</h3></th>            
@@ -110,7 +123,7 @@ class TestPage extends RoleAwareComponent {
                   </tr>
                   <>
                   {(question.test_question_answers).map((answer, indexA) =>
-                          <tr >
+                          <tr hidden={this.getChecked(question.id, answer.id)==-1}>
                           <td></td>
                           <td style={{textAlign:"center"}} >{indexA}. {answer.title}</td>
                           <td style={{textAlign:"center"}}> <input type="checkbox" checked={this.getChecked(question.id, answer.id)}></input></td>

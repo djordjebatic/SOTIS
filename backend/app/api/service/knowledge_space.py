@@ -1,10 +1,12 @@
 import numpy as np
 import sys
+import pandas as pd
 
 from app import app
 from app.api.models.test_take_answer import TestTakeAnswer
 from app.api.models.test_question_answer import TestQuestionAnswer
 from app.api.models.test import TestModel
+from app.api.models.test_question import TestQuestion
 from app.api.models.problem_edge import KnowledgeSpace, Problem, Edge
 from flask import request
 from flask_restful import Resource
@@ -24,13 +26,27 @@ class GenerateRealKnowledgeSpace(Resource):
     def put(self, ks_id):
         knowledge_space = KnowledgeSpace.query.get(int(ks_id))
         test = TestModel.query.get(int(knowledge_space.test_id))
-        if len(test.test_takes) > 1:
+        #if len(test.test_takes) > 1:
+        if knowledge_space.title == "Algebra":
+            ma = pd.read_csv("app/data/pisa.txt", sep='\s+')
+            m = ma.values
+        elif knowledge_space.title == "Programiranje":
+            ma = pd.read_csv("app/data/test_data.csv")
+            m = ma.values
+        elif len(test.test_takes) > 1:
             m = generate_matrix(test)
-            print("Matrix generated: " + str(m))
-            response = iita(m, v=1)
-            print("Response: " + str(response))
-            return create_graph(test, response['implications'])
-        return None
+        else:
+            return None
+
+        response = iita(m, v=1)
+        # print(response)
+        ks_real, ks_all = create_graph(test, response['implications'])
+        ret = {
+            "ks_real": ks_real,
+            "ks_all": ks_all
+        }
+        return ret
+
 
 
 def generate_matrix(test):
@@ -57,7 +73,7 @@ def is_correct(correct_answers, student_answers):
 
 
 def create_graph(test, implications):
-    ks_expected = KnowledgeSpace.query.filter_by(test_id=test.id, is_real=False).first()
+    ks_expected = KnowledgeSpace.query.filter_by(test_id=test.id, is_real=False, is_all_states=False).first()
     title = ks_expected.title + ' - Real Knowledge Space'
     ks = KnowledgeSpace.query.filter_by(title=title).first()
     if ks is not None:
@@ -107,8 +123,86 @@ def create_graph(test, implications):
                 if ok:
                     new_edge = Edge(lower_node, upper_node, ks.id)
                     new_edge.insert()
+        # arr - prva kolona indeksi sortiranih pitanja, druga kolona broj pitanja koja zavise od njih
 
-    return ks.json_format()
+    title_all = ks_expected.title + " - All states"
+    ks_all = KnowledgeSpace.query.filter_by(test_id=ks.test_id, is_all_states=True).first()
+    if ks_all is not None:
+        for edge in ks_all.edges:
+            edge.delete()
+        for problem in ks_all.problems:
+            problem.delete()
+        ks_all.delete()
+
+    ks_all = KnowledgeSpace(title_all, ks_expected.test_id, False, ks_expected.course_id, is_all_states=True)
+    ks_all.insert()
+    initial_state = Problem(" ", knowledge_space_id=ks_all.id, x=0, y=0, test_question_id=None)
+    initial_state.insert()
+
+    curr_list = ks_all.problems
+    problems = ks_all.problems
+    all_ids = dict()
+    x = 0
+    while len(problems) > 0:
+        y = 0
+        x = x + 300
+        problems = curr_list
+        curr_list = []
+        for i in range(n):
+            question = questions[arr[i][0]]
+            p = Problem.query.filter_by(test_question_id=question.id, knowledge_space_id=ks.id).first()
+            depends_on = []
+
+            for j in range(n):
+                if mat[j][i] == 1:
+                    depends_on.append(questions[arr[j][0]])
+            # drugi nacin
+            # for e in p.upper_edges:
+            #     q = TestQuestion.query.filter_by(problem = e.lower_node).first()
+            #     depends_on.append(q)
+            if p.title == 'c':
+                pomocna = True
+
+            for problem in problems:
+                if arr[i][1] == 0 or all(item in problem.questions for item in depends_on):
+                    l1 = [o.id for o in problem.questions]
+                    l1.append(question.id)
+                    l1.sort()
+                    key = find_key(all_ids, l1)
+                    if not any(t.id == question.id for t in problem.questions):
+                        if key == -1:
+                            if problem.title != " ":
+                                problem_title = problem.title + ", " + p.title
+                            else:
+                                problem_title = p.title
+                            new_problem = Problem(title=problem_title, knowledge_space_id=ks_all.id, x = x, y = y, test_question_id=None)
+                            new_problem.insert()
+                            y = y - 300
+                            new_edge = Edge(knowledge_space_id=ks_all.id, n1=problem, n2=new_problem)
+                            new_edge.insert()
+                            all_ids[new_problem.id] = l1
+                            question.problems.append(new_problem)
+                            question.insert()
+                            curr_list.append(new_problem)
+                            for q in problem.questions:
+                                q.problems.append(new_problem)
+                                q.insert()
+                            # if len(new_problem.questions) == n:
+                            #     new_problem.title = "Q"
+                            #     new_problem.update()
+                        else:
+                            old_problem = Problem.query.get(key)
+                            new_edge = Edge(knowledge_space_id=ks_all.id, n1=problem, n2=old_problem)
+                            new_edge.insert()
+
+    return ks.json_format(), ks_all.json_format()
+
+
+def find_key(map_index, l):
+    for key, value in map_index.items():
+        if l == value:
+            return key
+    return -1
 
 
 def bfs(curr, lower_node):
@@ -144,50 +238,52 @@ class CompareKnowledgeSpace(Resource):
     def get(self, ks_id):
         knowledge_space = KnowledgeSpace.query.get(int(ks_id))
         real = KnowledgeSpace.query.filter_by(test_id=knowledge_space.test_id, is_real=True).first()
-        real_edges = real.edges
-        expected_edges = knowledge_space.edges.copy()
+        if real is not None:
+            real_edges = real.edges
+            expected_edges = knowledge_space.edges.copy()
 
-        edges = []
-        for edge in real_edges:
-            index = contains_edge(edge, expected_edges)
-            if index != -1:
-                expected_edges.pop(index)
+            edges = []
+            for edge in real_edges:
+                index = contains_edge(edge, expected_edges)
+                if index != -1:
+                    expected_edges.pop(index)
+                    e = {
+                        "id": edge.id,
+                        "lower_id": edge.lower_id,
+                        "higher_id": edge.higher_id,
+                        "color": "blue"
+                    }
+                else:
+                    e = {
+                        "id": edge.id,
+                        "lower_id": edge.lower_id,
+                        "higher_id": edge.higher_id,
+                        "color": "green"
+                    }
+                edges.append(e)
+            for edge in expected_edges:
+                h_n = Problem.query.filter_by(id=edge.higher_id).first()
+                l_n = Problem.query.filter_by(id=edge.lower_id).first()
+                higher_node = Problem.query.filter_by(knowledge_space_id=real.id,
+                                                      test_question_id=h_n.test_question_id).first()
+                lower_node = Problem.query.filter_by(knowledge_space_id=real.id,
+                                                     test_question_id=l_n.test_question_id).first()
                 e = {
                     "id": edge.id,
-                    "lower_id": edge.lower_id,
-                    "higher_id": edge.higher_id,
-                    "color": "blue"
+                    "lower_id": lower_node.id,
+                    "higher_id": higher_node.id,
+                    "color": "red"
                 }
-            else:
-                e = {
-                    "id": edge.id,
-                    "lower_id": edge.lower_id,
-                    "higher_id": edge.higher_id,
-                    "color": "green"
-                }
-            edges.append(e)
-        for edge in expected_edges:
-            h_n = Problem.query.filter_by(id=edge.higher_id).first()
-            l_n = Problem.query.filter_by(id=edge.lower_id).first()
-            higher_node = Problem.query.filter_by(knowledge_space_id=real.id,
-                                                  test_question_id=h_n.test_question_id).first()
-            lower_node = Problem.query.filter_by(knowledge_space_id=real.id,
-                                                 test_question_id=l_n.test_question_id).first()
-            e = {
-                "id": edge.id,
-                "lower_id": lower_node.id,
-                "higher_id": higher_node.id,
-                "color": "red"
+                edges.append(e)
+
+            ret = {
+                "test_id": real.test_id,
+                "problems": [problem.json_format() for problem in real.problems],
+                "edges": edges
             }
-            edges.append(e)
+            return ret, 200
+        return 'real knowledge space not found', 404
 
-        ret = {
-            "test_id": real.test_id,
-            "problems": [problem.json_format() for problem in real.problems],
-            "edges": edges
-        }
-
-        return ret, 200
 
 
 def contains_edge(edge, edges):
@@ -242,15 +338,18 @@ class GetKnowledgeSpace(Resource):
     def get(self, ks_id):
         knowledge_space = KnowledgeSpace.query.get(int(ks_id))
         real = KnowledgeSpace.query.filter_by(test_id=knowledge_space.test_id, is_real=True).first()
+        all_states = KnowledgeSpace.query.filter_by(test_id=knowledge_space.test_id, is_all_states=True).first()
         if real is None:
             ret = {
                 'expected': knowledge_space.json_format(),
-                'real': {}
+                'real': {},
+                'all_states':{}
             }
         else:
             ret = {
                 'expected': knowledge_space.json_format(),
-                'real': real.json_format()
+                'real': real.json_format(),
+                'all_states': all_states.json_format()
             }
         return ret, 200
 

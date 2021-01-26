@@ -9,6 +9,7 @@ export const EMPTY_TYPE = 'customEmpty'; // Empty node type
 export const POLY_TYPE = 'poly';
 export const SPECIAL_TYPE = 'special';
 export const SKINNY_TYPE = 'skinny';
+export const GREEN_TYPE = 'greenNode';
 export const SPECIAL_CHILD_SUBTYPE = 'specialChild';
 export const EMPTY_EDGE_TYPE = 'emptyEdge';
 export const SPECIAL_EDGE_TYPE = 'specialEdge';
@@ -16,12 +17,18 @@ export const RED_EDGE_TYPE = 'redEdge';
 export const GREEN_EDGE_TYPE = 'greenEdge';
 export const COMPLEX_CIRCLE_TYPE = 'complexCircle';
 
-export const nodeTypes = [EMPTY_TYPE, POLY_TYPE, SPECIAL_TYPE, SKINNY_TYPE];
+export const nodeTypes = [EMPTY_TYPE, POLY_TYPE, SPECIAL_TYPE, SKINNY_TYPE, GREEN_TYPE];
 export const edgeTypes = [EMPTY_EDGE_TYPE, SPECIAL_EDGE_TYPE, GREEN_EDGE_TYPE, RED_EDGE_TYPE];
 
 const EmptyNodeShape = (
   <symbol viewBox="0 0 154 154" width="154" height="154" id="emptyNode">
     <circle cx="77" cy="77" r="76" />
+  </symbol>
+);
+
+const GreenNodeShape = (
+  <symbol viewBox="0 0 154 154" width="154" height="154" id="greenNode">
+    <circle cx="77" cy="77" r="76" fill="lightgreen"/>
   </symbol>
 );
 
@@ -133,6 +140,11 @@ export default {
       shape: EmptyNodeShape,
       shapeId: '#emptyNode',
       typeText: 'None',
+    },
+    greenNode: {
+      shape: GreenNodeShape,
+      shapeId: '#greenNode',
+      typeText: 'Current knowledge state',
     },
     empty: {
       shape: CustomEmptyShape,

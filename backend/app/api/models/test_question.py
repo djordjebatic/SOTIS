@@ -1,6 +1,11 @@
 from app import db
 from app.api.models.problem_edge import Problem, KnowledgeSpace
 
+problems_questions = db.Table(
+    'problems_test_questions',
+    db.Column('problem_id', db.Integer(), db.ForeignKey('problem.id')),
+    db.Column('test_question_id', db.Integer(), db.ForeignKey('test_question.id'))
+)
 
 class TestQuestion(db.Model):
     __tablename__ = 'test_question'
@@ -13,6 +18,11 @@ class TestQuestion(db.Model):
     test_question_answers = db.relationship('TestQuestionAnswer', backref='test_question', lazy='subquery')
     test_take_answers = db.relationship('TestTakeAnswer', backref='test_question', lazy='subquery')
     problem = db.relationship('Problem', uselist=False, backref='test_question', lazy='subquery')
+    problems = db.relationship(
+        'Problem',
+        secondary=problems_questions,
+        backref=db.backref('questions', lazy='subquery')
+    )
 
     def __init__(self, title, points, test_id):
         self.title = title

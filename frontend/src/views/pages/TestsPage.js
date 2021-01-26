@@ -214,7 +214,8 @@ class TestsPage extends RoleAwareComponent {
                     </CCardBody>
                     <CCardFooter>
                       <CButton
-                        hidden={this.state.role !== "ROLE_STUDENT"}
+                       // hidden={this.state.role !== "ROLE_STUDENT"}
+                       hidden={true}
                         color="primary"
                         onClick={(event) =>
                           history.push("/tests/takeTest/" + test.id)

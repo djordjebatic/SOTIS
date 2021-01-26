@@ -9,12 +9,14 @@ class TestTakeAnswer(db.Model):
     test_question_id = db.Column(db.Integer, db.ForeignKey('test_question.id'), nullable=False)
     test_question_answer_id = db.Column(db.Integer, db.ForeignKey('test_question_answer.id'), nullable=False)
     selected = db.Column(db.Boolean, nullable=False)
+    question_number = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, test_take_id, test_question_id, test_question_answer_id, selected):
+    def __init__(self, test_take_id, test_question_id, test_question_answer_id, selected, question_number):
         self.test_take_id = test_take_id
         self.test_question_id = test_question_id
         self.test_question_answer_id = test_question_answer_id
         self.selected = selected
+        self.question_number = question_number
 
     def insert(self):
         db.session.add(self)
@@ -33,6 +35,7 @@ class TestTakeAnswer(db.Model):
             "test_take_id": self.test_take_id,
             "test_question_id": self.test_question_id,
             "test_question_answer_id": self.test_question_answer_id,
-            "selected": self.selected
+            "selected": self.selected,
+            "question_number": self.question_number
         }
 

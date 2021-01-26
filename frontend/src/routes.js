@@ -13,6 +13,7 @@ const Courses = React.lazy(() => import('./views/pages/Courses/Courses.js'));
 const CoursePage = React.lazy(() => import('./views/pages/Courses/CoursePage.js'));
 const ShowTest = React.lazy(() => import('./views/pages/Test/ShowTest.js'));
 const StudentTests = React.lazy(() => import('./views/pages/Test/StudentTests.js'));
+const TakeGuided = React.lazy(() => import('./views/pages/Test/TakeGuided.js'))
 
 const Toaster = React.lazy(() => import('./views/notifications/toaster/Toaster'));
 const Tables = React.lazy(() => import('./views/base/tables/Tables'));
@@ -95,7 +96,9 @@ const routes = [
   { path: '/courses', exact:true, name: 'Courses', component: Courses},
   { path: '/courses/:id', exact:true, name: 'Course Details', component: CoursePage},
   { path: '/test/:id', exact:true, name: 'Test Details', component: ShowTest},
-  { path: '/student/tests', exact: true, name: "Tests", component:StudentTests}
+  { path: '/student/tests', exact: true, name: "Tests", component:StudentTests},
+  { path: '/tests/takeGuided/:id', exact: true, name: "Guided Testing", component: TakeGuided}
+
 
 ];
 

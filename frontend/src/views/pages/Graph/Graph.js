@@ -20,7 +20,9 @@ import {
   CNavLink,
   CTabContent,
   CTabPane,
-  CSelect
+  CSelect,
+  CRow,
+  CCardHeader
 } from '@coreui/react'
 
 import {
@@ -273,6 +275,8 @@ class Graph extends React.Component<IGraphProps, IGraphState> {
         "edges": []
       },
       currentTab: 'expected',
+      allStates: {},
+      selected_title:'',
       similarity: 0
     };
 
@@ -342,7 +346,7 @@ getKnowledgeSpace(){
     url: url + 'knowledge_space/' + id,
   }).then((response) => {
     this.setState({knowledgeSpaceTitle: response.data.expected.title}, () => console.log(this.state.knowledgeSpaceTitle))
-    this.setState({knowledgeSpace: response.data.expected, realKnowledgeSpace:response.data.real})
+    this.setState({knowledgeSpace: response.data.expected, realKnowledgeSpace:response.data.real, allStates: response.data.all_states})
     this.createGraph(response.data.expected)
     axios.get(url + 'testquestions/' + response.data.expected.test_id)
         .then((resp) => {
@@ -569,8 +573,12 @@ createGraph(knowledgeSpace){
       let id = viewNode.id.substring(1);
       axios.get(url + 'problem/' + id)
         .then((resp) => {
-          NotificationManager.info(resp.data.title, '', 4000);
+          this.setState({selected_title: resp.data.title})
+          //NotificationManager.info(resp.data.title, '', 4000);
       })
+    }
+    else{
+      this.setState({selected_title:''})
     }
 
     this.setState({ selected: viewNode });
@@ -759,8 +767,11 @@ createGraph(knowledgeSpace){
     else if (tab == 'real'){
       this.createGraph(this.state.realKnowledgeSpace)
     }
-    else{
+    else if (tab == 'compare'){
       this.compareGraphs()
+    }
+    else{
+      this.createGraph(this.state.allStates)
     }
   }
 
@@ -777,32 +788,32 @@ createGraph(knowledgeSpace){
     let edge = {}
     let node = {}
     var i
-    for (i in knowledgeSpace.edges) {
-      let t = EMPTY_EDGE_TYPE
-      if (knowledgeSpace.edges[i].color === 'red'){
-        t = RED_EDGE_TYPE
+      for (i in knowledgeSpace.edges) {
+        let t = EMPTY_EDGE_TYPE
+        if (knowledgeSpace.edges[i].color === 'red'){
+          t = RED_EDGE_TYPE
+        }
+        else if(knowledgeSpace.edges[i].color === 'green'){
+          t = GREEN_EDGE_TYPE
+        }
+        edge = {
+          id: 'E'+knowledgeSpace.edges[i].id,
+          source: 'N'+knowledgeSpace.edges[i].lower_id,
+          target: 'N'+knowledgeSpace.edges[i].higher_id,
+          type: t
+        }
+        edges.push(edge)
+      } 
+      for (i in knowledgeSpace.problems){
+        node = {
+          id: 'N'+knowledgeSpace.problems[i].id,
+          title: knowledgeSpace.problems[i].title,
+          type: EMPTY_TYPE,
+          x: knowledgeSpace.problems[i].x,
+          y: knowledgeSpace.problems[i].y,
+        }
+        nodes.push(node)
       }
-      else if(knowledgeSpace.edges[i].color === 'green'){
-        t = GREEN_EDGE_TYPE
-      }
-      edge = {
-        id: knowledgeSpace.edges[i].id,
-        source: knowledgeSpace.edges[i].lower_id,
-        target: knowledgeSpace.edges[i].higher_id,
-        type: t
-      }
-      edges.push(edge)
-    } 
-    for (i in knowledgeSpace.problems){
-      node = {
-        id: knowledgeSpace.problems[i].id,
-        title: knowledgeSpace.problems[i].title,
-        type: EMPTY_TYPE,
-        x: knowledgeSpace.problems[i].x,
-        y: knowledgeSpace.problems[i].y,
-      }
-      nodes.push(node)
-    }
 
     const temp: IGraph = {
       edges: edges,
@@ -810,6 +821,7 @@ createGraph(knowledgeSpace){
     };
     this.setState({graph:temp})
     }, (error) => {
+      NotificationManager.error('Real knowledge space is not generated!', 'Error', 4000)
       console.log(error);
     }); 
 
@@ -832,8 +844,8 @@ createGraph(knowledgeSpace){
       url: url + 'knowledge_space/generateReal/' + id,
       //headers: { "Authorization": AuthStr } ,   
   }).then((response) => {
-      this.setState({ realKnowledgeSpace: response.data })
-      this.createGraph(response.data)
+      this.setState({ realKnowledgeSpace: response.data.ks_real, allStates: response.data.ks_all })
+      this.createGraph(response.data.ks_real)
       NotificationManager.success('Real knowledge space successfuly generated', 'Success!', 4000);
   }, (error) => {
       console.log(error);
@@ -927,6 +939,15 @@ createGraph(knowledgeSpace){
             </select>
           </div> */}
         </div>
+        <br></br>
+        <CCard>
+          <CCardHeader>
+            Selected Node
+          </CCardHeader>
+          <CCardBody>
+            Questions: {this.state.selected_title}
+          </CCardBody>
+        </CCard>
         <CCard>
           <CCardBody>
             <CTabs activeTab="expected">
@@ -946,6 +967,11 @@ createGraph(knowledgeSpace){
                     Compare
                   </CNavLink>
                 </CNavItem>
+                <CNavItem onClick={() => this.handleTabChange('all-states')}>
+                  <CNavLink data-tab="all-states">
+                    All states
+                  </CNavLink>
+                </CNavItem>
               </CNav>
               <CTabContent>
                 <CTabPane data-tab="expected">
@@ -953,6 +979,8 @@ createGraph(knowledgeSpace){
                 <CTabPane data-tab="real">
                 </CTabPane>
                 <CTabPane data-tab="compare">
+                </CTabPane>
+                <CTabPane data-tab="all-states">
                 </CTabPane>
               </CTabContent>
             </CTabs>

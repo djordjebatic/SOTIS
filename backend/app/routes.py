@@ -28,7 +28,7 @@ from app.api.service.knowledge_space import KnowledgeSpaceAPI, CompareKnowledgeS
 from app.api.service.auth import UserRegistration, UserLogin, UserLogout
 from app.api.service.users import UserAPI, UsersAPI
 from app.api.service.courses import CourseAPI, CoursesListAPI, CourseTestsAPI, CourseStudentsAPI, CourseKSAPI
-from app.api.service.tests import GetTestAPI, GetTestTakeAPI, TestAPI, QTITestAPI
+from app.api.service.tests import GetTestAPI, GetTestTakeAPI, TestAPI, QTITestAPI, GuidedTestingAPI
 
 
 # if not current_user.is_authenticated:
@@ -199,7 +199,10 @@ class ProblemAPI(Resource):
         problem = Problem.query.filter(Problem.id == problem_id).first()
         if problem:
             question = TestQuestion.query.filter(TestQuestion.problem == problem).first()
-            return question.json_format(), 200
+            if question:
+                return question.json_format(), 200
+            else:
+                return problem.json_format(), 200
         else:
             return {'error': 'Problem with id {} does\'t exist'.format(problem_id)}, 409
 
@@ -368,6 +371,7 @@ api.add_resource(GetTestAPI, "/test/<int:test_id>")
 api.add_resource(GetTestTakeAPI, "/test/<int:test_id>/test_take")
 api.add_resource(TestAPI, "/test/<int:id>")
 api.add_resource(QTITestAPI, "/qti-test/<int:id>")
+api.add_resource(GuidedTestingAPI, "/tests/take_guided/<int:id>")
 api.add_resource(GraphComparisonAPI, "/compare-graphs/<int:test_id>")
 
 # def get_current_user():

@@ -6,11 +6,12 @@ courses_students = db.Table(
     db.Column('course_id', db.Integer(), db.ForeignKey('course.id'))
 )
 
-courser_professors = db.Table(
+courses_professors = db.Table(
     'courses_professors',
     db.Column('professor_id', db.Integer(), db.ForeignKey('professor.id')),
     db.Column('course_id', db.Integer(), db.ForeignKey('course.id'))
 )
+
 
 class Course(db.Model):
     __tablename__ = 'course'
@@ -27,7 +28,7 @@ class Course(db.Model):
     )
     professors = db.relationship(
         'Professor',
-        secondary=courser_professors,
+        secondary=courses_professors,
         backref=db.backref('courses', lazy='dynamic')
     )
 
