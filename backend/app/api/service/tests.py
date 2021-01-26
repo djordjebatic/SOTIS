@@ -188,11 +188,10 @@ class GuidedTestingAPI(Resource):
         else:
             generate_probabilities(test_take, knowledge_space)
             all_state_probabilities = sorted(test_take.state_probabilities, key=lambda probability: probability.value, reverse=True)
-            problem = Problem.query.get(all_state_probabilities[0].problem_id)
-            if len(problem.questions) == 0:
-                problem = Problem.query.get(all_state_probabilities[1].problem_id)
-            questions_titles = problem.title.split(", ")
             question = find_next_question(test_take)
+            for st in all_state_probabilities:
+                st.value = 1/len(all_state_probabilities)
+                st.update()
         for i in range(len(question.test_question_answers)):
             question.test_question_answers[i].isCorrect = 0
         ret = {
@@ -221,7 +220,7 @@ class GuidedTestingAPI(Resource):
             if real_answer.isCorrect != answer['isCorrect']:
                 r = 0
 
-        theta = 0.5
+        theta = 0.4
         states_probabilities = StateProbability.query.filter_by(test_take_id=test_take.id).all()
         question_title = answered_question['title']
         total_q = 0
@@ -246,8 +245,14 @@ class GuidedTestingAPI(Resource):
 
         states_probabilities = StateProbability.query.filter_by(test_take_id=test_take.id).all()
         values = [pr.value for pr in states_probabilities]
-        max_value = max(values)
-        if max_value > 0.9:
+        sum_values = sum(values)
+        max_value = 0
+        for probability in states_probabilities:
+            probability.value = probability.value/sum_values
+            probability.update()
+            if probability.value > max_value:
+                max_value = probability.value
+        if max_value > 0.75:
             test_take.done = True
             test_take.update()
             knowledge_space = KnowledgeSpace.query.filter_by(test_id=test_take.test_id, is_all_states=True).first()

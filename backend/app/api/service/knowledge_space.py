@@ -362,7 +362,7 @@ class GraphComparisonAPI(Resource):
 
         real_edges = []
         real_nodes = set()
-        ks_real = KnowledgeSpace.query.filter(KnowledgeSpace.test_id == test_id, KnowledgeSpace.is_real == True).first()
+        ks_real = KnowledgeSpace.query.filter(KnowledgeSpace.test_id == test_id, KnowledgeSpace.is_real == True, KnowledgeSpace.is_all_states==False).first()
         edges_real = ks_real.edges
         for edge in edges_real:
             problem_higher = Problem.query.get(edge.higher_id)
@@ -374,7 +374,7 @@ class GraphComparisonAPI(Resource):
 
         expected_edges = []
         expected_nodes = set()
-        ks_expected = KnowledgeSpace.query.filter(KnowledgeSpace.test_id == test_id, KnowledgeSpace.is_real == False).first()
+        ks_expected = KnowledgeSpace.query.filter(KnowledgeSpace.test_id == test_id, KnowledgeSpace.is_real == False, KnowledgeSpace.is_all_states==False).first()
         edges_expected = ks_expected.edges
         for edge in edges_expected:
             problem_higher = Problem.query.get(edge.higher_id)

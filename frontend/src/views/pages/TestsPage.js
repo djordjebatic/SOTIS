@@ -232,7 +232,7 @@ class TestsPage extends RoleAwareComponent {
                       >
                         Details
                       </CButton>
-                      <CButton
+                      <CButton style={{marginLeft:"10px"}}
                         hidden={this.state.role === "ROLE_STUDENT"}
                         color="primary"
                         onClick={() => this.getXML(test.id)}

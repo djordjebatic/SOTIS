@@ -831,7 +831,7 @@ createGraph(knowledgeSpace){
       //headers: { "Authorization": AuthStr } ,   
     }).then((response) => {
         this.setState({ similarity: response.data })
-        NotificationManager.success('Similarity score is: ' + response.data, 'Success!', 40000);
+        //NotificationManager.success('Similarity score is: ' + response.data, 'Success!', 40000);
     }, (error) => {
         console.log(error);
     });
@@ -946,6 +946,11 @@ createGraph(knowledgeSpace){
           </CCardHeader>
           <CCardBody>
             Questions: {this.state.selected_title}
+          </CCardBody>
+        </CCard>
+        <CCard hidden={this.state.currentTab !== 'compare'}>
+          <CCardBody>
+            Difference: {this.state.similarity}
           </CCardBody>
         </CCard>
         <CCard>
