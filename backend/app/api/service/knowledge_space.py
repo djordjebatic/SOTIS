@@ -12,6 +12,7 @@ from flask_restful import Resource
 sys.path.append('learning_spaces/')
 from learning_spaces.kst import iita
 
+import networkx as nx
 
 # data_frame = pd.DataFrame({'a': [1, 0, 1], 'b': [0, 1, 0], 'c': [0, 1, 1]})
 # response = iita(data_frame, v=1)
@@ -25,8 +26,9 @@ class GenerateRealKnowledgeSpace(Resource):
         test = TestModel.query.get(int(knowledge_space.test_id))
         if len(test.test_takes) > 1:
             m = generate_matrix(test)
-            response = iita(m, v=2)
-            print(response)
+            print("Matrix generated: " + str(m))
+            response = iita(m, v=1)
+            print("Response: " + str(response))
             return create_graph(test, response['implications'])
         return None
 
@@ -184,6 +186,7 @@ class CompareKnowledgeSpace(Resource):
             "problems": [problem.json_format() for problem in real.problems],
             "edges": edges
         }
+
         return ret, 200
 
 
@@ -250,3 +253,49 @@ class GetKnowledgeSpace(Resource):
                 'real': real.json_format()
             }
         return ret, 200
+
+
+class GraphComparisonAPI(Resource):
+    def get(self, test_id):
+        test = TestModel.query.get(int(test_id))
+        questions = test.test_questions
+        question_ids = [q.id for q in questions]
+
+        real_edges = []
+        real_nodes = set()
+        ks_real = KnowledgeSpace.query.filter(KnowledgeSpace.test_id == test_id, KnowledgeSpace.is_real == True).first()
+        edges_real = ks_real.edges
+        for edge in edges_real:
+            problem_higher = Problem.query.get(edge.higher_id)
+            problem_higher_question_id = problem_higher.test_question_id
+            if problem_higher_question_id in question_ids:
+                real_nodes.add(str(edge.higher_id))
+                real_nodes.add(str(edge.lower_id))
+                real_edges.append((edge.lower_id, edge.higher_id))
+
+        expected_edges = []
+        expected_nodes = set()
+        ks_expected = KnowledgeSpace.query.filter(KnowledgeSpace.test_id == test_id, KnowledgeSpace.is_real == False).first()
+        edges_expected = ks_expected.edges
+        for edge in edges_expected:
+            problem_higher = Problem.query.get(edge.higher_id)
+            problem_higher_question_id = problem_higher.test_question_id
+            if problem_higher_question_id in question_ids:
+                expected_nodes.add(str(edge.higher_id))
+                expected_nodes.add(str(edge.lower_id))
+                expected_edges.append((edge.lower_id, edge.higher_id))
+
+        expected_ks = nx.Graph()
+        expected_ks.add_nodes_from(list(expected_nodes))
+        expected_ks.add_edges_from(expected_edges)
+
+        actual_ks = nx.Graph()
+        actual_ks.add_nodes_from(list(real_nodes))
+        actual_ks.add_edges_from(real_edges)
+
+        print('Expected edges: {}'.format(expected_edges))
+        print('Real edges: {}'.format(real_edges))
+        distance = nx.algorithms.similarity.graph_edit_distance(expected_ks, actual_ks)
+        print('Graph edit distance: {}'.format(distance))
+
+        return distance, 200

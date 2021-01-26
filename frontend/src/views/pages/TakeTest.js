@@ -97,6 +97,8 @@ class TakeTest extends RoleAwareComponent {
       test: this.state.test,
       test_take_id: id
     }
+
+    console.log(data)
     let token = localStorage.getItem("loggedInUser")
     let AuthStr = 'Bearer '.concat(token);       
     axios({
