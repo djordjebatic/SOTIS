@@ -38,7 +38,7 @@ class GenerateRealKnowledgeSpace(Resource):
         else:
             return None
 
-        response = iita(m, v=1)
+        response = iita(m, v=2)
         # print(response)
         ks_real, ks_all = create_graph(test, response['implications'])
         ret = {
@@ -46,7 +46,6 @@ class GenerateRealKnowledgeSpace(Resource):
             "ks_all": ks_all
         }
         return ret
-
 
 
 def generate_matrix(test):
@@ -285,7 +284,6 @@ class CompareKnowledgeSpace(Resource):
         return 'real knowledge space not found', 404
 
 
-
 def contains_edge(edge, edges):
     h_n = Problem.query.filter_by(id=edge.higher_id).first()
     l_n = Problem.query.filter_by(id=edge.lower_id).first()
@@ -362,27 +360,31 @@ class GraphComparisonAPI(Resource):
 
         real_edges = []
         real_nodes = set()
-        ks_real = KnowledgeSpace.query.filter(KnowledgeSpace.test_id == test_id, KnowledgeSpace.is_real == True, KnowledgeSpace.is_all_states==False).first()
+        ks_real = KnowledgeSpace.query.filter(KnowledgeSpace.test_id == test_id, KnowledgeSpace.is_real == True, KnowledgeSpace.is_all_states == False).first()
         edges_real = ks_real.edges
         for edge in edges_real:
             problem_higher = Problem.query.get(edge.higher_id)
             problem_higher_question_id = problem_higher.test_question_id
+            problem_lower = Problem.query.get(edge.lower_id)
+            problem_lower_question_id = problem_lower.test_question_id
             if problem_higher_question_id in question_ids:
-                real_nodes.add(str(edge.higher_id))
-                real_nodes.add(str(edge.lower_id))
-                real_edges.append((edge.lower_id, edge.higher_id))
+                real_nodes.add(problem_higher_question_id)
+                real_nodes.add(problem_lower_question_id)
+                real_edges.append((problem_lower_question_id, problem_higher_question_id))
 
         expected_edges = []
         expected_nodes = set()
-        ks_expected = KnowledgeSpace.query.filter(KnowledgeSpace.test_id == test_id, KnowledgeSpace.is_real == False, KnowledgeSpace.is_all_states==False).first()
+        ks_expected = KnowledgeSpace.query.filter(KnowledgeSpace.test_id == test_id, KnowledgeSpace.is_real == False, KnowledgeSpace.is_all_states == False).first()
         edges_expected = ks_expected.edges
         for edge in edges_expected:
             problem_higher = Problem.query.get(edge.higher_id)
             problem_higher_question_id = problem_higher.test_question_id
+            problem_lower = Problem.query.get(edge.lower_id)
+            problem_lower_question_id = problem_lower.test_question_id
             if problem_higher_question_id in question_ids:
-                expected_nodes.add(str(edge.higher_id))
-                expected_nodes.add(str(edge.lower_id))
-                expected_edges.append((edge.lower_id, edge.higher_id))
+                expected_nodes.add(problem_higher_question_id)
+                expected_nodes.add(problem_lower_question_id)
+                expected_edges.append((problem_lower_question_id, problem_higher_question_id))
 
         expected_ks = nx.Graph()
         expected_ks.add_nodes_from(list(expected_nodes))
