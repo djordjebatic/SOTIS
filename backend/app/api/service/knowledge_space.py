@@ -48,7 +48,6 @@ class GenerateRealKnowledgeSpace(Resource):
         return ret
 
 
-
 def generate_matrix(test):
     n = len(test.test_questions)
     m = len(test.test_takes)
@@ -283,7 +282,6 @@ class CompareKnowledgeSpace(Resource):
             }
             return ret, 200
         return 'real knowledge space not found', 404
-
 
 
 def contains_edge(edge, edges):

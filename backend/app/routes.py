@@ -30,6 +30,7 @@ from app.api.service.users import UserAPI, UsersAPI
 from app.api.service.courses import CourseAPI, CoursesListAPI, CourseTestsAPI, CourseStudentsAPI, CourseKSAPI
 from app.api.service.tests import GetTestAPI, GetTestTakeAPI, TestAPI, QTITestAPI, GuidedTestingAPI
 
+import networkx as nx
 
 # if not current_user.is_authenticated:
 #     return current_app.login_manager.unauthorized()
@@ -233,6 +234,7 @@ class EdgeAPI(Resource):
         upper_node_id = data['upper_id'][1:]
 
         knowledge_space_id = data['knowledge_space_id']
+        knowledge_space = KnowledgeSpace.query.filter(KnowledgeSpace.id == knowledge_space_id).first()
 
         upper_node = Problem.query.filter(Problem.id == upper_node_id).first()
         lower_node = Problem.query.filter(Problem.id == lower_node_id).first()
@@ -248,38 +250,21 @@ class EdgeAPI(Resource):
                              and Edge.upper_id == upper_node_id).first():
             return {'error': 'Edge already exists'}, 409'''
 
-        # backwards cycle check
-        end = False
-        l_n = lower_node
-        while not end:
-            if not l_n.json_format()['lower_edge_ids']:
-                break
-            if upper_node_id in l_n.json_format()['lower_edge_ids']:
-                return {'error': '[RECURSION] - Lower node (id: {}) already has upper edges'}, 409
-            else:
-                if l_n.json_format()['lower_edge_ids']:
-                    l_n = Problem.query.filter(Problem.id == l_n.json_format()['lower_edge_ids'][0]).first()
-                else:
-                    end = True
+        nx_graph = nx.DiGraph()
+        nx_edges = [(int(lower_node_id), int(upper_node_id))]
+        for edge in knowledge_space.edges:
+            nx_edges.append((edge.lower_id, edge.higher_id))
 
-        # forward cycle check
-        end = False
-        u_n = upper_node
-        while not end:
-            if not u_n.json_format()['lower_edge_ids']:
-                break
-            if lower_node_id in u_n.json_format()['lower_edge_ids']:
-                return {'error': '[RECURSION] - Lower node (id: {}) already has upper edges'}, 409
-            else:
-                if u_n.json_format()['lower_edge_ids']:
-                    u_n = Problem.query.filter(Problem.id == u_n.json_format()['lower_edge_ids'][0]).first()
-                else:
-                    end = True
+        nx_graph.add_edges_from(nx_edges)
+        print(nx_edges)
 
-        new_edge = Edge(lower_node, upper_node, knowledge_space_id)
-        new_edge.insert()
+        if nx.is_directed_acyclic_graph(nx_graph):
+            new_edge = Edge(lower_node, upper_node, knowledge_space_id)
+            new_edge.insert()
 
-        return new_edge.json_format(), 200
+            return new_edge.json_format(), 200
+        else:
+            return {'error': '[RECURSION] - Graph created is not directed acyclic graph'}, 409
 
     def get(self):
         return [edge.json_format() for edge in Edge.query.all()], 200
