@@ -38,7 +38,7 @@ class GenerateRealKnowledgeSpace(Resource):
         else:
             return None
 
-        response = iita(m, v=1)
+        response = iita(m, v=2)
         # print(response)
         ks_real, ks_all = create_graph(test, response['implications'])
         ret = {
