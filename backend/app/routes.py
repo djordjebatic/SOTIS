@@ -163,13 +163,14 @@ class TestTakeAPI(Resource):
 
         questions = test['test_questions']
 
-        for question in questions:
+        for i, question in enumerate(questions):
             answers = question['test_question_answers']
 
             for answer in answers:
                 test_take_answer = TestTakeAnswer(test_take_id=test_take.id, test_question_id=question['id'],
                                                   test_question_answer_id=answer['id'],
-                                                  selected=answer['isCorrect'])
+                                                  selected=answer['isCorrect'],
+                                                  question_number=i)
                 test_take_answer.insert()
         test_take.done = True
         test_take.update()
