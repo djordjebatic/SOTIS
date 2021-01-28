@@ -139,7 +139,7 @@ class TestPage extends RoleAwareComponent {
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td style={{textAlign:"center"}}>4/{this.state.test.max_score}</td>
+                    <td style={{textAlign:"center"}}>{this.state.testTake.score}/{this.state.test.max_score}</td>
                   </tr>
                 </tbody>
             </table>
