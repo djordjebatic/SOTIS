@@ -211,16 +211,28 @@ class GuidedTestingAPI(Resource):
         answered_question = data['question']
         question_number = data['question_number']
         r = 1
+        correct = 0
+        incorrect = 0.0
+        total_correct = 0.0
         for answer in answered_question['test_question_answers']:
+
             test_take_answer = TestTakeAnswer(test_take_id=test_take.id, test_question_id=answered_question['id'],
                                               test_question_answer_id=answer['id'], selected=answer['isCorrect'],
                                               question_number=question_number)
             test_take_answer.insert()
             real_answer = TestQuestionAnswer.query.get(answer['id'])
-            if real_answer.isCorrect != answer['isCorrect']:
+            if real_answer.isCorrect and not answer['isCorrect']:
+                total_correct += 1
+            elif real_answer.isCorrect and answer['isCorrect']:
+                total_correct += 1
+                correct += 1
+            elif not real_answer.isCorrect and answer['isCorrect']:
                 r = 0
-
-        theta = 0.4
+                incorrect = 1
+        if incorrect == 0:
+            test_take.score += answered_question['points']*correct/total_correct
+            test_take.update()
+        theta = 0.5
         states_probabilities = StateProbability.query.filter_by(test_take_id=test_take.id).all()
         question_title = answered_question['title']
         total_q = 0
@@ -252,7 +264,7 @@ class GuidedTestingAPI(Resource):
             probability.update()
             if probability.value > max_value:
                 max_value = probability.value
-        if max_value > 0.75:
+        if max_value > 0.70:
             test_take.done = True
             test_take.update()
             knowledge_space = KnowledgeSpace.query.filter_by(test_id=test_take.test_id, is_all_states=True).first()

@@ -167,23 +167,29 @@ class TestTakeAPI(Resource):
         score = 0
         max_score = 0
         for i, question in enumerate(questions):
+            correct = 0
+            incorrect = 0.0
+            total_correct = 0.0
             answers = question['test_question_answers']
 
             for answer in answers:
                 question_answer = TestQuestionAnswer.query.filter(TestQuestionAnswer.id == answer['id']).first()
                 if answer['isCorrect'] and question_answer.isCorrect:
                     print('add 0.5 in q ' + str(i))
-                    score += 1
-                    max_score += 1
+                    correct += 1
+                    total_correct += 1
                 elif answer['isCorrect'] and not question_answer.isCorrect:
                     print('sub 0.5 in q ' + str(i))
-                    score -= 1
-
+                    incorrect += 1
+                elif not answer['isCorrect'] and question_answer.isCorrect:
+                    total_correct += 1
                 test_take_answer = TestTakeAnswer(test_take_id=test_take.id, test_question_id=question['id'],
                                                   test_question_answer_id=answer['id'],
                                                   selected=answer['isCorrect'],
                                                   question_number=i)
                 test_take_answer.insert()
+            if incorrect == 0:
+                score += question['points']*correct/total_correct
         test_take.done = True
         test_take.score = score
         print(max_score)

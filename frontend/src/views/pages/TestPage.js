@@ -119,7 +119,7 @@ class TestPage extends RoleAwareComponent {
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td style={{textAlign:"center"}}>7</td>
+                    <td style={{textAlign:"center"}}>{question.points}</td>
                   </tr>
                   <>
                   {(question.test_question_answers).map((answer, indexA) =>
@@ -128,7 +128,7 @@ class TestPage extends RoleAwareComponent {
                           <td style={{textAlign:"center"}} >{indexA}. {answer.title}</td>
                           <td style={{textAlign:"center"}}> <input type="checkbox" checked={this.getChecked(question.id, answer.id)}></input></td>
                           <td style={{textAlign:"center"}}> <input type="checkbox" checked={answer.isCorrect}></input></td>
-                          <td style={{textAlign:"center"}}>1</td>
+                          <td style={{textAlign:"center"}}></td>
                         </tr>
                         )}
                         </>

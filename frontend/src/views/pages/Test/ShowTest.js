@@ -406,8 +406,11 @@ class ShowTest extends RoleAwareComponent {
                   scopedSlots={{
                     "#": (item, index) => <td>{index + 1}</td>,
                     name: (item, index) => <td>{item.student.user.name}</td>,
-                    lastname: (item, index) => (
+                    last_name: (item, index) => (
                       <td>{item.student.user.last_name}</td>
+                    ),
+                    email: (item, index) =>(
+                      <td>{item.student.user.email}</td>
                     ),
                     results: (item, index) => <td>
                           <CButton
